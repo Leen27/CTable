@@ -1,11 +1,12 @@
 {
-  "name": "vite-project",
+  "name": "@cowin/sim-table",
+  "version": "2.0.1",
+  "description": "Headless UI for building powerful tables & datagrids for TS/JS.",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "knip": "knip",
-    "build": "pnpm --dir ./packages/core build"
+    "build": "pnpm --dir ./packages/table-core build"
   },
   "dependencies": {
     "vue": "^3.5.24"
