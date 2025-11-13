@@ -4,7 +4,7 @@
   "description": "表格内核, fork tanstank table",
   "private": true,
   "type": "module",
-  "main": "index.js",
+  "main": "dist/sim-table.js",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
