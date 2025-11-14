@@ -10,8 +10,8 @@ export default defineConfig({
     outDir: 'dist',
     lib: {
       entry: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
-      name: 'sim-table',
-      fileName: 'sim-table',
+      name: 'sim-table-core',
+      fileName: 'sim-table-core',
       formats: ['es']
     },
     rollupOptions: {

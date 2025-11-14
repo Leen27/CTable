@@ -4,7 +4,7 @@
   "description": "表格内核, fork tanstank table",
   "private": true,
   "type": "module",
-  "main": "dist/sim-table.js",
+  "main": "dist/sim-table-core.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "vite",
