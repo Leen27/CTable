@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "include": ["src/**/*.ts"],
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "types": ["vite/client", "node"],
+    "target": "ES2023",
+    "lib": ["DOM", "DOM.Iterable", "ES2021.String", "ES2022", "ES2023"],
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "checkJs": true,
+    "declaration": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "noImplicitReturns": false, // TODO enable
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": false, // TODO enable
+    "noUnusedParameters": false, // TODO enable
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "emitDeclarationOnly": true,
+    "declarationDir": "dist",
+
+    /* Linting */
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+
+    // 允许常规导入同时导入类型和值
+    "verbatimModuleSyntax": false,
+    // 或者使用这个配置
+    "isolatedModules": false,
+    "preserveValueImports": false
+  },
+}

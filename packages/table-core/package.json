@@ -5,12 +5,17 @@
   "private": true,
   "type": "module",
   "main": "dist/sim-table.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -b && vite build",
+    "types": "tsc -p ./tsconfig.types.json",
+    "build": "tsc -p ./tsconfig.types.json && vite build",
     "preview": "vite preview"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "~5.9.3"
+  }
 }

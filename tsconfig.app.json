@@ -13,11 +13,10 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
-          // 允许常规导入同时导入类型和值
+    // 允许常规导入同时导入类型和值
     "verbatimModuleSyntax": false,
     // 或者使用这个配置
     "isolatedModules": false,
     "preserveValueImports": false
-  },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
+  }
 }
