@@ -1,6 +1,6 @@
 {
-  "name": "-table",
-  "version": "0.0.0",
+  "name": "@cowin/sim-table",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -20,8 +20,8 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "vue": "^3.5.22",
-    "@cowin/sim-table-core": "workspace:*"
+    "@cowin/sim-table-core": "workspace:*",
+    "vue": "^3.5.22"
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.2",
@@ -45,6 +45,7 @@
     "start-server-and-test": "^2.1.2",
     "typescript": "~5.9.0",
     "vite": "npm:rolldown-vite@latest",
+    "vite-plugin-dts": "^4.5.4",
     "vite-plugin-vue-devtools": "^8.0.3",
     "vitest": "^3.2.4",
     "vue-tsc": "^3.1.1"

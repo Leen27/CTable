@@ -7,6 +7,24 @@
 
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+
+    "types": ["vite/client", "node"],
+    "target": "ES2023",
+    "lib": ["DOM", "DOM.Iterable", "ES2021.String", "ES2022", "ES2023"],
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "noImplicitAny": false,
+
+    // 允许常规导入同时导入类型和值
+    "verbatimModuleSyntax": false,
+    // 或者使用这个配置
+    "isolatedModules": false,
+    "preserveValueImports": false
   }
 }
