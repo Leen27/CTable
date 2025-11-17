@@ -1,4 +1,4 @@
-import { TableOptions, createTable, RowData, TableOptionsResolved } from '@cowin/sim-table-core'
+import { TableOptions, createTable, RowData, TableOptionsResolved } from '@cowin/i-table-core'
 import {
   h,
   watchEffect,
@@ -12,7 +12,7 @@ import {
 } from 'vue'
 import { mergeProxy } from './merge-proxy'
 
-export * from '@cowin/sim-table-core'
+export * from '@cowin/i-table-core'
 
 export type TableOptionsWithReactiveData<TData extends RowData> = Omit<
   TableOptions<TData>,
@@ -42,7 +42,7 @@ function getOptionsWithReactiveData<TData extends RowData>(
   })
 }
 
-export function useVueTable<TData extends RowData>(
+export function useITable<TData extends RowData>(
   initialOptions: TableOptionsWithReactiveData<TData>,
 ) {
   const IS_REACTIVE = isRef(initialOptions.data)

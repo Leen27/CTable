@@ -1,5 +1,5 @@
 {
-  "name": "@cowin/sim-table",
+  "name": "@cowin/i-table",
   "version": "2.0.0",
   "private": true,
   "type": "module",
@@ -20,7 +20,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "@cowin/sim-table-core": "workspace:*",
+    "@cowin/i-table-core": "workspace:*",
     "vue": "^3.5.22"
   },
   "devDependencies": {

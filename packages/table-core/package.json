@@ -1,5 +1,5 @@
 {
-  "name": "@cowin/sim-table-core",
+  "name": "@cowin/i-table-core",
   "version": "0.0.1",
   "description": "表格内核, fork tanstank table",
   "private": true,
