@@ -1,0 +1,60 @@
+.ag-header-cell-menu-button,
+.ag-header-cell-filter-button,
+.ag-panel-title-bar-button,
+.ag-header-expand-icon,
+.ag-column-group-icons,
+.ag-set-filter-group-icons,
+:where(.ag-group-expanded) .ag-icon,
+:where(.ag-group-contracted) .ag-icon,
+.ag-chart-settings-prev,
+.ag-chart-settings-next,
+.ag-group-title-bar-icon,
+.ag-column-select-header-icon,
+.ag-floating-filter-button-button,
+.ag-filter-toolpanel-expand,
+.ag-panel-title-bar-button-icon,
+.ag-chart-menu-icon {
+    color: var(--ag-icon-button-color);
+    border-radius: var(--ag-icon-button-border-radius);
+    background-color: var(--ag-icon-button-background-color);
+    box-shadow: 0 0 0 var(--ag-icon-button-background-spread) var(--ag-icon-button-background-color);
+
+    &:hover {
+        background-color: var(--ag-icon-button-hover-background-color);
+        box-shadow: 0 0 0 var(--ag-icon-button-background-spread) var(--ag-icon-button-hover-background-color);
+        color: var(--ag-icon-button-hover-color);
+    }
+}
+
+.ag-filter-active {
+    position: relative;
+    border-radius: 1px;
+
+    /* Apply active background color with a background-image so that it
+        overlays on top of the existing background-color */
+    background-image: linear-gradient(
+        var(--ag-icon-button-active-background-color),
+        var(--ag-icon-button-active-background-color)
+    );
+
+    /* Apply active background spread color with an outline so that it
+        overlays on top of the existing background spread (which uses a
+        box-shadow) */
+    outline: solid var(--ag-icon-button-background-spread) var(--ag-icon-button-active-background-color);
+
+    &::after {
+        content: '';
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        top: -1px;
+        right: -1px;
+        border-radius: 50%;
+        background-color: var(--ag-icon-button-active-indicator-color);
+    }
+
+    :where(.ag-icon-filter) {
+        clip-path: path('M8,0C8,4.415 11.585,8 16,8L16,16L0,16L0,0L8,0Z');
+        color: var(--ag-icon-button-active-color);
+    }
+}

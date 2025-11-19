@@ -1,0 +1,144 @@
+import type { LocaleTextFunc } from '../../agStack/interfaces/iLocaleService';
+import { _parseDateTimeFromString, _serialiseDate } from '../../agStack/utils/date';
+import { _exists } from '../../agStack/utils/generic';
+import { AgInputDateFieldSelector } from '../../agStack/widgets/agInputDateField';
+import type { DataTypeService } from '../../columns/dataTypeService';
+import type { AgColumn } from '../../entities/agColumn';
+import type { ElementParams } from '../../utils/element';
+import type { GridInputDateField } from '../../widgets/gridWidgetTypes';
+import type { CellEditorInput } from './iCellEditorInput';
+import type { IDateStringCellEditorParams } from './iDateStringCellEditor';
+import { SimpleCellEditor } from './simpleCellEditor';
+
+const DateStringCellElement: ElementParams = {
+    tag: 'ag-input-date-field',
+    ref: 'eEditor',
+    cls: 'ag-cell-editor',
+};
+class DateStringCellEditorInput implements CellEditorInput<string, IDateStringCellEditorParams, GridInputDateField> {
+    private eEditor: GridInputDateField;
+    private params: IDateStringCellEditorParams;
+    private includeTime: boolean | undefined;
+
+    constructor(
+        private readonly getDataTypeService: () => DataTypeService | undefined,
+        private readonly getLocaleTextFunc: () => LocaleTextFunc
+    ) {}
+
+    public getTemplate(): ElementParams {
+        return DateStringCellElement;
+    }
+
+    public getAgComponents() {
+        return [AgInputDateFieldSelector];
+    }
+
+    public init(eEditor: GridInputDateField, params: IDateStringCellEditorParams): void {
+        this.eEditor = eEditor;
+        this.params = params;
+
+        const { min, max, step, colDef } = params;
+
+        if (min != null) {
+            eEditor.setMin(min);
+        }
+
+        if (max != null) {
+            eEditor.setMax(max);
+        }
+
+        if (step != null) {
+            eEditor.setStep(step);
+        }
+        this.includeTime =
+            params.includeTime ?? this.getDataTypeService()?.getDateIncludesTimeFlag?.(colDef.cellDataType);
+        if (this.includeTime != null) {
+            eEditor.setIncludeTime(this.includeTime);
+        }
+    }
+
+    public getValidationErrors(): string[] | null {
+        const { eEditor, params } = this;
+        const raw = eEditor.getInputElement().value;
+        const value = this.formatDate(this.parseDate(raw ?? undefined));
+        const { min, max, getValidationErrors } = params;
+        let internalErrors: string[] | null = [];
+
+        if (value) {
+            const date = new Date(value);
+            const translate = this.getLocaleTextFunc();
+
+            if (min) {
+                const minDate = new Date(min);
+                if (date < minDate) {
+                    const minDateString = minDate.toLocaleDateString();
+                    internalErrors.push(
+                        translate('minDateValidation', `Date must be after ${minDateString}`, [minDateString])
+                    );
+                }
+            }
+
+            if (max) {
+                const maxDate = new Date(max);
+                if (date > maxDate) {
+                    const maxDateString = maxDate.toLocaleDateString();
+                    internalErrors.push(
+                        translate('maxDateValidation', `Date must be before ${maxDateString}`, [maxDateString])
+                    );
+                }
+            }
+        }
+
+        if (!internalErrors.length) {
+            internalErrors = null;
+        }
+
+        if (getValidationErrors) {
+            return getValidationErrors({
+                value: this.getValue(),
+                cellEditorParams: params,
+                internalErrors,
+            });
+        }
+
+        return internalErrors;
+    }
+
+    public getValue(): string | null | undefined {
+        const { params, eEditor } = this;
+        const value = this.formatDate(eEditor.getDate());
+        if (!_exists(value) && !_exists(params.value)) {
+            return params.value;
+        }
+        return params.parseValue(value ?? '');
+    }
+
+    public getStartValue(): string | null | undefined {
+        return _serialiseDate(this.parseDate(this.params.value ?? undefined) ?? null, this.includeTime ?? false);
+    }
+
+    private parseDate(value: string | undefined): Date | undefined {
+        const dataTypeSvc = this.getDataTypeService();
+        return dataTypeSvc
+            ? dataTypeSvc.getDateParserFunction(this.params.column as AgColumn)(value)
+            : _parseDateTimeFromString(value) ?? undefined;
+    }
+
+    private formatDate(value: Date | undefined): string | undefined {
+        const dataTypeSvc = this.getDataTypeService();
+        return dataTypeSvc
+            ? dataTypeSvc.getDateFormatterFunction(this.params.column as AgColumn)(value)
+            : _serialiseDate(value ?? null, this.includeTime ?? false) ?? undefined;
+    }
+}
+
+export class DateStringCellEditor extends SimpleCellEditor<string, IDateStringCellEditorParams, GridInputDateField> {
+    constructor() {
+        super(
+            new DateStringCellEditorInput(
+                () => this.beans.dataTypeSvc,
+                () => this.getLocaleTextFunc()
+            )
+        );
+    }
+}
