@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import HelloWorld from './components/HelloWorld.vue'
 import InitTable from './components/InitTable.vue';
+import PinColumn from './components/PinColumn.vue';
 </script>
 
 <template>
@@ -14,6 +15,7 @@ import InitTable from './components/InitTable.vue';
 
   <main>
     <InitTable />
+    <PinColumn />
   </main>
 </template>
 
