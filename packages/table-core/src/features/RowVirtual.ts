@@ -19,10 +19,6 @@ export interface VirtualState {
   startIndex: number
   endIndex: number
   virtualRows: number
-  /** 顶部填充高度 */
-  paddingTop: number
-  /** 底部填充高度 */
-  paddingBottom: number
   /** 总行数 */
   totalRows: number
   /** 行高缓存（用于动态行高） */
@@ -38,6 +34,10 @@ export interface VirtualState {
     /** 是否启用缓存 */
     enableCache?: boolean
   }
+  /** transform 偏移样式 */
+  transform?: string
+  /** 容器总高度 */
+  containerHeight?: number
 }
 
 export interface VirtualTableState {
@@ -164,9 +164,9 @@ export interface VirtualInstance<TData extends RowData> {
    */
   scrollToRow: (rowIndex: number) => void
   /**
-   * 获取虚拟填充元素（用于撑开滚动容器）。
+   * 获取虚拟滚动样式（包含 transform 和容器高度）。
    */
-  getVirtualPadding: () => { top: number; bottom: number }
+  getVirtualStyle: () => { transform: string; containerHeight: number }
   /**
    * 重新计算虚拟行。
    */
@@ -213,8 +213,6 @@ const defaultVirtualState: VirtualState = {
   startIndex: 0,
   endIndex: 0,
   virtualRows: 0,
-  paddingTop: 0,
-  paddingBottom: 0,
   totalRows: 0,
   rowHeightCache: new Map(),
   offsetCache: [],
@@ -224,6 +222,8 @@ const defaultVirtualState: VirtualState = {
     batchUpdateThreshold: 16,
     // maxCacheSize: 1000, // 将在后续版本中添加
   },
+  transform: '',
+  containerHeight: 0,
 }
 
 export const RowVirtual: TableFeature = {
@@ -356,18 +356,6 @@ export const RowVirtual: TableFeature = {
       return { startIndex, endIndex }
     }
 
-    // 计算虚拟填充
-    const calculateVirtualPadding = (
-      startIndex: number,
-      endIndex: number,
-      totalRows: number,
-    ): { top: number; bottom: number } => {
-      const rowHeight = getRowHeight()
-      const top = startIndex * rowHeight
-      const bottom = (totalRows - endIndex - 1) * rowHeight
-      return { top: Math.max(0, top), bottom: Math.max(0, bottom) }
-    }
-
     table.setVirtual = (updater: Updater<VirtualState>) => {
       const safeUpdater: Updater<VirtualState> = (old: VirtualState) => {
         let newState = functionalUpdate(updater, old)
@@ -380,7 +368,13 @@ export const RowVirtual: TableFeature = {
             newState.viewportHeight,
             totalRows,
           )
-          const { top, bottom } = calculateVirtualPadding(startIndex, endIndex, totalRows)
+
+          // 使用 transform 替代 padding
+          const { transform, containerHeight } = calculateTransformOffset(
+            startIndex,
+            endIndex,
+            totalRows,
+          )
 
           newState = {
             ...newState,
@@ -388,8 +382,8 @@ export const RowVirtual: TableFeature = {
             endIndex,
             virtualRows: endIndex - startIndex + 1,
             totalRows,
-            paddingTop: top,
-            paddingBottom: bottom,
+            transform,
+            containerHeight,
           }
         }
 
@@ -418,10 +412,6 @@ export const RowVirtual: TableFeature = {
           : ((table.initialState as any).virtual ?? defaultVirtualState),
       )
     }
-    table.setScrollTop = (scrollTop: number) => {
-      table.setVirtual((old: VirtualState) => ({ ...old, scrollTop }))
-      ;(table.options as any).onVirtualScroll?.(scrollTop)
-    }
     table.scrollToRow = (rowIndex: number) => {
       const rowHeight = getRowHeight()
       const scrollTop = rowIndex * rowHeight
@@ -435,11 +425,11 @@ export const RowVirtual: TableFeature = {
       const rowHeight = getRowHeight()
       return totalRows * rowHeight
     }
-    table.getVirtualPadding = () => {
+    table.getVirtualStyle = () => {
       const { virtual } = table.getState() as any
       return {
-        top: virtual.paddingTop || 0,
-        bottom: virtual.paddingBottom || 0,
+        transform: virtual.transform || 'translateY(0px)',
+        containerHeight: virtual.containerHeight || 0,
       }
     }
     table.getPerformanceMetrics = () => {
@@ -484,7 +474,13 @@ export const RowVirtual: TableFeature = {
         virtual.viewportHeight,
         totalRows,
       )
-      const { top, bottom } = calculateVirtualPadding(startIndex, endIndex, totalRows)
+
+      // 使用 transform 替代 padding
+      const { transform, containerHeight } = calculateTransformOffset(
+        startIndex,
+        endIndex,
+        totalRows,
+      )
 
       table.setVirtual((old: VirtualState) => ({
         ...old,
@@ -492,8 +488,8 @@ export const RowVirtual: TableFeature = {
         endIndex,
         virtualRows: endIndex - startIndex + 1,
         totalRows,
-        paddingTop: top,
-        paddingBottom: bottom,
+        transform,
+        containerHeight,
       }))
     }
     table.getStartIndex = () => {
