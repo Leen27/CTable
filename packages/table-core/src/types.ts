@@ -27,12 +27,7 @@ import {
   RowPinningRow,
   RowPinningTableState,
 } from './features/RowPinning'
-import {
-  CoreHeader,
-  CoreHeaderGroup,
-  HeaderContext,
-  HeadersInstance,
-} from './core/headers'
+import { CoreHeader, CoreHeaderGroup, HeaderContext, HeadersInstance } from './core/headers'
 import { FacetedColumn, FacetedOptions } from './features/ColumnFaceting'
 import { GlobalFacetingInstance } from './features/GlobalFaceting'
 import {
@@ -92,6 +87,13 @@ import {
   RowSelectionRow,
   RowSelectionTableState,
 } from './features/RowSelection'
+import {
+  VirtualInstance,
+  VirtualOptions,
+  VirtualTableState,
+  VirtualInitialTableState,
+  VirtualRow,
+} from './features/RowVirtual'
 import { CoreRow } from './core/row'
 import { PartialKeys, UnionToIntersection } from './utils'
 import { CellContext, CoreCell } from './core/cell'
@@ -102,16 +104,14 @@ export interface TableFeature<TData extends RowData = any> {
     cell: Cell<TData, unknown>,
     column: Column<TData>,
     row: Row<TData>,
-    table: Table<TData>
+    table: Table<TData>,
   ) => void
   createColumn?: (column: Column<TData, unknown>, table: Table<TData>) => void
   createHeader?: (header: Header<TData, unknown>, table: Table<TData>) => void
   createRow?: (row: Row<TData>, table: Table<TData>) => void
   createTable?: (table: Table<TData>) => void
   getDefaultColumnDef?: () => Partial<ColumnDef<TData, unknown>>
-  getDefaultOptions?: (
-    table: Table<TData>
-  ) => Partial<TableOptionsResolved<TData>>
+  getDefaultOptions?: (table: Table<TData>) => Partial<TableOptionsResolved<TData>>
   getInitialState?: (initialState?: InitialTableState) => Partial<TableState>
 }
 
@@ -149,7 +149,8 @@ export interface Table<TData extends RowData>
     ColumnSizingInstance,
     ExpandedInstance<TData>,
     PaginationInstance<TData>,
-    RowSelectionInstance<TData> {}
+    RowSelectionInstance<TData>,
+    VirtualInstance<TData> {}
 
 interface FeatureOptions<TData extends RowData>
   extends VisibilityOptions,
@@ -164,7 +165,8 @@ interface FeatureOptions<TData extends RowData>
     ExpandedOptions<TData>,
     ColumnSizingOptions,
     PaginationOptions,
-    RowSelectionOptions<TData> {}
+    RowSelectionOptions<TData>,
+    VirtualOptions<TData> {}
 
 export interface TableOptionsResolved<TData extends RowData>
   extends CoreOptions<TData>,
@@ -189,7 +191,8 @@ export interface TableState
     GroupingTableState,
     ColumnSizingTableState,
     PaginationTableState,
-    RowSelectionTableState {}
+    RowSelectionTableState,
+    VirtualTableState {}
 
 interface CompleteInitialTableState
   extends CoreTableState,
@@ -204,7 +207,8 @@ interface CompleteInitialTableState
     GroupingTableState,
     ColumnSizingTableState,
     PaginationInitialTableState,
-    RowSelectionTableState {}
+    RowSelectionTableState,
+    VirtualInitialTableState {}
 
 export interface InitialTableState extends Partial<CompleteInitialTableState> {}
 
@@ -216,7 +220,8 @@ export interface Row<TData extends RowData>
     ColumnFiltersRow<TData>,
     GroupingRow,
     RowSelectionRow,
-    ExpandedRow {}
+    ExpandedRow,
+    VirtualRow {}
 
 export interface RowModel<TData extends RowData> {
   rows: Row<TData>[]
@@ -226,12 +231,10 @@ export interface RowModel<TData extends RowData> {
 
 export type AccessorFn<TData extends RowData, TValue = unknown> = (
   originalRow: TData,
-  index: number
+  index: number,
 ) => TValue
 
-export type ColumnDefTemplate<TProps extends object> =
-  | string
-  | ((props: TProps) => any)
+export type ColumnDefTemplate<TProps extends object> = string | ((props: TProps) => any)
 
 export type StringOrTemplateHeader<TData, TValue> =
   | string
@@ -278,37 +281,36 @@ export interface IdentifiedColumnDef<TData extends RowData, TValue = unknown>
   header?: StringOrTemplateHeader<TData, TValue>
 }
 
-export type DisplayColumnDef<
-  TData extends RowData,
-  TValue = unknown,
-> = ColumnDefBase<TData, TValue> & ColumnIdentifiers<TData, TValue>
+export type DisplayColumnDef<TData extends RowData, TValue = unknown> = ColumnDefBase<
+  TData,
+  TValue
+> &
+  ColumnIdentifiers<TData, TValue>
 
 interface GroupColumnDefBase<TData extends RowData, TValue = unknown>
   extends ColumnDefBase<TData, TValue> {
   columns?: ColumnDef<TData, any>[]
 }
 
-export type GroupColumnDef<
-  TData extends RowData,
-  TValue = unknown,
-> = GroupColumnDefBase<TData, TValue> & ColumnIdentifiers<TData, TValue>
+export type GroupColumnDef<TData extends RowData, TValue = unknown> = GroupColumnDefBase<
+  TData,
+  TValue
+> &
+  ColumnIdentifiers<TData, TValue>
 
-export interface AccessorFnColumnDefBase<
-  TData extends RowData,
-  TValue = unknown,
-> extends ColumnDefBase<TData, TValue> {
+export interface AccessorFnColumnDefBase<TData extends RowData, TValue = unknown>
+  extends ColumnDefBase<TData, TValue> {
   accessorFn: AccessorFn<TData, TValue>
 }
 
-export type AccessorFnColumnDef<
-  TData extends RowData,
-  TValue = unknown,
-> = AccessorFnColumnDefBase<TData, TValue> & ColumnIdentifiers<TData, TValue>
+export type AccessorFnColumnDef<TData extends RowData, TValue = unknown> = AccessorFnColumnDefBase<
+  TData,
+  TValue
+> &
+  ColumnIdentifiers<TData, TValue>
 
-export interface AccessorKeyColumnDefBase<
-  TData extends RowData,
-  TValue = unknown,
-> extends ColumnDefBase<TData, TValue> {
+export interface AccessorKeyColumnDefBase<TData extends RowData, TValue = unknown>
+  extends ColumnDefBase<TData, TValue> {
   id?: string
   accessorKey: (string & {}) | keyof TData
 }
@@ -316,8 +318,7 @@ export interface AccessorKeyColumnDefBase<
 export type AccessorKeyColumnDef<
   TData extends RowData,
   TValue = unknown,
-> = AccessorKeyColumnDefBase<TData, TValue> &
-  Partial<ColumnIdentifiers<TData, TValue>>
+> = AccessorKeyColumnDefBase<TData, TValue> & Partial<ColumnIdentifiers<TData, TValue>>
 
 export type AccessorColumnDef<TData extends RowData, TValue = unknown> =
   | AccessorKeyColumnDef<TData, TValue>
@@ -330,10 +331,9 @@ export type ColumnDef<TData extends RowData, TValue = unknown> =
   | GroupColumnDef<TData, TValue>
   | AccessorColumnDef<TData, TValue>
 
-export type ColumnDefResolved<
-  TData extends RowData,
-  TValue = unknown,
-> = Partial<UnionToIntersection<ColumnDef<TData, TValue>>> & {
+export type ColumnDefResolved<TData extends RowData, TValue = unknown> = Partial<
+  UnionToIntersection<ColumnDef<TData, TValue>>
+> & {
   accessorKey?: string
 }
 
@@ -357,5 +357,4 @@ export interface Header<TData extends RowData, TValue>
   extends CoreHeader<TData, TValue>,
     ColumnSizingHeader {}
 
-export interface HeaderGroup<TData extends RowData>
-  extends CoreHeaderGroup<TData> {}
+export interface HeaderGroup<TData extends RowData> extends CoreHeaderGroup<TData> {}
