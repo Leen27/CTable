@@ -94,6 +94,12 @@ import {
   VirtualInitialTableState,
   VirtualRow,
 } from './features/RowVirtual'
+import {
+  DomRenderingInstance,
+  DomRenderingOptions,
+  DomRenderingTableState,
+  DomRenderingInitialTableState,
+} from './features/DomRendering'
 import { CoreRow } from './core/row'
 import { PartialKeys, UnionToIntersection } from './utils'
 import { CellContext, CoreCell } from './core/cell'
@@ -166,7 +172,8 @@ interface FeatureOptions<TData extends RowData>
     ColumnSizingOptions,
     PaginationOptions,
     RowSelectionOptions<TData>,
-    VirtualOptions<TData> {}
+    // VirtualOptions<TData>,
+    DomRenderingOptions<TData> {}
 
 export interface TableOptionsResolved<TData extends RowData>
   extends CoreOptions<TData>,
@@ -192,7 +199,8 @@ export interface TableState
     ColumnSizingTableState,
     PaginationTableState,
     RowSelectionTableState,
-    VirtualTableState {}
+    VirtualTableState,
+    DomRenderingTableState {}
 
 interface CompleteInitialTableState
   extends CoreTableState,
@@ -208,7 +216,8 @@ interface CompleteInitialTableState
     ColumnSizingTableState,
     PaginationInitialTableState,
     RowSelectionTableState,
-    VirtualInitialTableState {}
+    VirtualInitialTableState,
+    DomRenderingInitialTableState {}
 
 export interface InitialTableState extends Partial<CompleteInitialTableState> {}
 

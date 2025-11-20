@@ -167,27 +167,32 @@ function toggleAllColumnsVisibility() {
                       :props="header.getContext()"
                     />
 
-                    <button
-                      v-if="header.column.getIsPinned() !== 'left'"
-                      @click="header.column.pin('left')"
-                      class="px-2 border rounded"
-                    >
-                      {{ '<=' }}
-                    </button>
-                    <button
-                      v-if="header.column.getIsPinned()"
-                      @click="header.column.pin(false)"
-                      class="px-2 border rounded"
-                    >
-                      X
-                    </button>
-                    <button
-                      v-if="header.column.getIsPinned() !== 'right'"
-                      @click="header.column.pin('right')"
-                      class="px-2 border rounded"
-                    >
-                      {{ '=>' }}
-                    </button>
+                    <div class="pin-buttons">
+                      <button
+                        v-if="header.column.getIsPinned() !== 'left'"
+                        @click="header.column.pin('left')"
+                        class="pin-button pin-left"
+                        title="固定到左侧"
+                      >
+                        {{ '◀' }}
+                      </button>
+                      <button
+                        v-if="header.column.getIsPinned()"
+                        @click="header.column.pin(false)"
+                        class="pin-button pin-center"
+                        title="取消固定"
+                      >
+                        {{ '○' }}
+                      </button>
+                      <button
+                        v-if="header.column.getIsPinned() !== 'right'"
+                        @click="header.column.pin('right')"
+                        class="pin-button pin-right"
+                        title="固定到右侧"
+                      >
+                        {{ '▶' }}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -211,6 +216,40 @@ function toggleAllColumnsVisibility() {
   --iTable-t-header-background-base: #cdeeea;
   --iTable-rowBorderColor: rgba(#e0e0e0);
 }
+
+.pin-buttons {
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.pin-button {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 2px 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.pin-button:hover {
+  background-color: #e0e0e0;
+  transform: scale(1.1);
+}
+
+.pin-left {
+  color: #1a73e8;
+}
+
+.pin-center {
+  color: #ea4335;
+}
+
+.pin-right {
+  color: #34a853;
+}
+
 .iTable-root {
   width: 100%;
   height: 100%;
