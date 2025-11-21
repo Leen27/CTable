@@ -10,7 +10,7 @@
     "dev": "vite -c vite.config.dev.ts",
     "types": "tsc -p ./tsconfig.types.json",
     "build": "tsc -p ./tsconfig.types.json && vite build",
-    "preview": "vite preview"
+    "test:unit": "vitest"
   },
   "keywords": [],
   "author": "",
