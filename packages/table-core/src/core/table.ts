@@ -37,7 +37,7 @@ import { RowPagination } from '../features/RowPagination'
 import { RowPinning } from '../features/RowPinning'
 import { RowSelection } from '../features/RowSelection'
 import { RowSorting } from '../features/RowSorting'
-// import { RowVirtual } from '../features/RowVirtual'
+import { RenderGrid } from '../features/RenderGrid'
 
 const builtInFeatures = [
   Headers,
@@ -55,7 +55,7 @@ const builtInFeatures = [
   RowPinning,
   RowSelection,
   ColumnSizing,
-  // RowVirtual,
+  RenderGrid,
 ] as const
 
 //

@@ -1,4 +1,11 @@
-import { createColumnHelper, getCoreRowModel, flexRender, useTable } from '../src'
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  flexRender,
+  useTable,
+  TableOptionsResolved,
+  createTable,
+} from '../src'
 
 type Person = {
   firstName: string
@@ -68,64 +75,79 @@ const columns = [
   }),
 ]
 
-const renderGrid = () => {
-  // Create table elements
-  const tableElement = document.createElement('table')
-  const theadElement = document.createElement('thead')
-  const tbodyElement = document.createElement('tbody')
-  const tfootElement = document.createElement('tfoot')
-
-  tableElement.appendChild(theadElement)
-  tableElement.appendChild(tbodyElement)
-  tableElement.appendChild(tfootElement)
-
-  // Render table headers
-  table.getHeaderGroups().forEach((headerGroup) => {
-    const trElement = document.createElement('tr')
-    headerGroup.headers.forEach((header) => {
-      const thElement = document.createElement('th')
-      thElement.innerHTML = header.isPlaceholder
-        ? ''
-        : flexRender(header.column.columnDef.header, header.getContext())
-      trElement.appendChild(thElement)
-    })
-    theadElement.appendChild(trElement)
-  })
-
-  // Render table rows
-  table.getRowModel().rows.forEach((row) => {
-    const trElement = document.createElement('tr')
-    row.getVisibleCells().forEach((cell) => {
-      const tdElement = document.createElement('td')
-      tdElement.innerHTML = flexRender(cell.column.columnDef.cell, cell.getContext())
-      trElement.appendChild(tdElement)
-    })
-    tbodyElement.appendChild(trElement)
-  })
-
-  // Render table footers
-  table.getFooterGroups().forEach((footerGroup) => {
-    const trElement = document.createElement('tr')
-    footerGroup.headers.forEach((header) => {
-      const thElement = document.createElement('th')
-      thElement.innerHTML = header.isPlaceholder
-        ? ''
-        : flexRender(header.column.columnDef.footer, header.getContext())
-      trElement.appendChild(thElement)
-    })
-    tfootElement.appendChild(trElement)
-  })
-
-  // Clear previous content and append new content
-  const wrapperElement = document.getElementById('app') as HTMLDivElement
-  wrapperElement.innerHTML = ''
-  wrapperElement.appendChild(tableElement)
-}
-
-const table = useTable<Person>({
+// Compose in the generic options to the user options
+const resolvedOptions: TableOptionsResolved<Person> = {
   data,
   columns,
   getCoreRowModel: getCoreRowModel(),
-})
+  state: {}, // Dummy state
+  onStateChange: () => {}, // noop
+  renderFallbackValue: null,
+}
 
-renderGrid()
+// Create a new table
+const table = createTable<Person>(resolvedOptions)
+
+table.render(document.querySelector('#app') as HTMLElement)
+
+// const renderGrid = () => {
+//   // Create table elements
+//   const tableElement = document.createElement('table')
+//   const theadElement = document.createElement('thead')
+//   const tbodyElement = document.createElement('tbody')
+//   const tfootElement = document.createElement('tfoot')
+
+//   tableElement.appendChild(theadElement)
+//   tableElement.appendChild(tbodyElement)
+//   tableElement.appendChild(tfootElement)
+
+//   // Render table headers
+//   table.getHeaderGroups().forEach((headerGroup) => {
+//     const trElement = document.createElement('tr')
+//     headerGroup.headers.forEach((header) => {
+//       const thElement = document.createElement('th')
+//       thElement.innerHTML = header.isPlaceholder
+//         ? ''
+//         : flexRender(header.column.columnDef.header, header.getContext())
+//       trElement.appendChild(thElement)
+//     })
+//     theadElement.appendChild(trElement)
+//   })
+
+//   // Render table rows
+//   table.getRowModel().rows.forEach((row) => {
+//     const trElement = document.createElement('tr')
+//     row.getVisibleCells().forEach((cell) => {
+//       const tdElement = document.createElement('td')
+//       tdElement.innerHTML = flexRender(cell.column.columnDef.cell, cell.getContext())
+//       trElement.appendChild(tdElement)
+//     })
+//     tbodyElement.appendChild(trElement)
+//   })
+
+//   // Render table footers
+//   table.getFooterGroups().forEach((footerGroup) => {
+//     const trElement = document.createElement('tr')
+//     footerGroup.headers.forEach((header) => {
+//       const thElement = document.createElement('th')
+//       thElement.innerHTML = header.isPlaceholder
+//         ? ''
+//         : flexRender(header.column.columnDef.footer, header.getContext())
+//       trElement.appendChild(thElement)
+//     })
+//     tfootElement.appendChild(trElement)
+//   })
+
+//   // Clear previous content and append new content
+//   const wrapperElement = document.getElementById('app') as HTMLDivElement
+//   wrapperElement.innerHTML = ''
+//   wrapperElement.appendChild(tableElement)
+// }
+
+// const table = useTable<Person>({
+//   data,
+//   columns,
+//   getCoreRowModel: getCoreRowModel(),
+// })
+
+// renderGrid()

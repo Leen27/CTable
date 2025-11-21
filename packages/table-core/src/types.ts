@@ -87,13 +87,13 @@ import {
   RowSelectionRow,
   RowSelectionTableState,
 } from './features/RowSelection'
-import {
-  VirtualInstance,
-  VirtualOptions,
-  VirtualTableState,
-  VirtualInitialTableState,
-  VirtualRow,
-} from './features/RowVirtual'
+// import {
+//   VirtualInstance,
+//   VirtualOptions,
+//   VirtualTableState,
+//   VirtualInitialTableState,
+//   VirtualRow,
+// } from './features/RowVirtual'
 // import {
 //   DomRenderingInstance,
 //   DomRenderingOptions,
@@ -102,7 +102,7 @@ import {
 // } from './features/DomRendering'
 import {
   RenderGridInitialTableState,
-  RenderGridState,
+  RenderGridInstance,
   RenderGridStateOptions,
   RenderGridTableState,
 } from './features/RenderGrid'
@@ -163,7 +163,7 @@ export interface Table<TData extends RowData>
     ExpandedInstance<TData>,
     PaginationInstance<TData>,
     RowSelectionInstance<TData>,
-    VirtualInstance<TData> {}
+    RenderGridInstance<TData> {}
 
 interface FeatureOptions<TData extends RowData>
   extends VisibilityOptions,
@@ -236,8 +236,7 @@ export interface Row<TData extends RowData>
     ColumnFiltersRow<TData>,
     GroupingRow,
     RowSelectionRow,
-    ExpandedRow,
-    VirtualRow {}
+    ExpandedRow {}
 
 export interface RowModel<TData extends RowData> {
   rows: Row<TData>[]
