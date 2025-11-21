@@ -68,7 +68,7 @@ const columns = [
   }),
 ]
 
-const renderTable = () => {
+const renderGrid = () => {
   // Create table elements
   const tableElement = document.createElement('table')
   const theadElement = document.createElement('thead')
@@ -128,4 +128,4 @@ const table = useTable<Person>({
   getCoreRowModel: getCoreRowModel(),
 })
 
-renderTable()
+renderGrid()
