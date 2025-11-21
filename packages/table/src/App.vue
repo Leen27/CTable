@@ -15,7 +15,7 @@ import PinColumn from './components/PinColumn.vue';
 
   <main>
     <InitTable />
-    <PinColumn />
+    <!-- <PinColumn /> -->
   </main>
 </template>
 

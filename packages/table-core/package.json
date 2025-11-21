@@ -7,7 +7,7 @@
   "main": "dist/sim-table-core.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite -c vite.config.dev.ts",
     "types": "tsc -p ./tsconfig.types.json",
     "build": "tsc -p ./tsconfig.types.json && vite build",
     "preview": "vite preview"
