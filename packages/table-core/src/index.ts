@@ -46,3 +46,5 @@ export * from './aggregationFns'
 
 // Column Helper
 export * from './columnHelper'
+
+export * from './useTable'

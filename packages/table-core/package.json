@@ -17,5 +17,8 @@
   "license": "ISC",
   "devDependencies": {
     "typescript": "~5.9.3"
+  },
+  "dependencies": {
+    "nanostores": "^1.1.0"
   }
 }
