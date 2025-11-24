@@ -1,11 +1,4 @@
-import {
-  RowData,
-  Column,
-  Header,
-  HeaderGroup,
-  Table,
-  TableFeature,
-} from '../types'
+import { RowData, Column, Header, HeaderGroup, Table, TableFeature } from '../types'
 import { getMemoOptions, memo } from '../utils'
 
 const debug = 'debugHeaders'
@@ -219,7 +212,7 @@ function createHeader<TData extends RowData, TValue>(
     placeholderId?: string
     index: number
     depth: number
-  }
+  },
 ): Header<TData, TValue> {
   const id = options.id ?? column.id
 
@@ -255,7 +248,7 @@ function createHeader<TData extends RowData, TValue>(
     }),
   }
 
-  table._features.forEach(feature => {
+  table._features.forEach((feature) => {
     feature.createHeader?.(header as Header<TData, TValue>, table)
   })
 
@@ -270,193 +263,187 @@ export const Headers: TableFeature = {
       () => [
         table.getAllColumns(),
         table.getVisibleLeafColumns(),
-        table.getState().columnPinning.left,
-        table.getState().columnPinning.right,
+        table.getState().columnPinning?.left,
+        table.getState().columnPinning?.right,
       ],
       (allColumns, leafColumns, left, right) => {
         const leftColumns =
-          left
-            ?.map(columnId => leafColumns.find(d => d.id === columnId)!)
-            .filter(Boolean) ?? []
+          left?.map((columnId) => leafColumns.find((d) => d.id === columnId)!).filter(Boolean) ?? []
 
         const rightColumns =
-          right
-            ?.map(columnId => leafColumns.find(d => d.id === columnId)!)
-            .filter(Boolean) ?? []
+          right?.map((columnId) => leafColumns.find((d) => d.id === columnId)!).filter(Boolean) ??
+          []
 
         const centerColumns = leafColumns.filter(
-          column => !left?.includes(column.id) && !right?.includes(column.id)
+          (column) => !left?.includes(column.id) && !right?.includes(column.id),
         )
 
         const headerGroups = buildHeaderGroups(
           allColumns,
           [...leftColumns, ...centerColumns, ...rightColumns],
-          table
+          table,
         )
 
         return headerGroups
       },
-      getMemoOptions(table.options, debug, 'getHeaderGroups')
+      getMemoOptions(table.options, debug, 'getHeaderGroups'),
     )
 
     table.getCenterHeaderGroups = memo(
       () => [
         table.getAllColumns(),
         table.getVisibleLeafColumns(),
-        table.getState().columnPinning.left,
-        table.getState().columnPinning.right,
+        table.getState().columnPinning?.left,
+        table.getState().columnPinning?.right,
       ],
       (allColumns, leafColumns, left, right) => {
         leafColumns = leafColumns.filter(
-          column => !left?.includes(column.id) && !right?.includes(column.id)
+          (column) => !left?.includes(column.id) && !right?.includes(column.id),
         )
         return buildHeaderGroups(allColumns, leafColumns, table, 'center')
       },
-      getMemoOptions(table.options, debug, 'getCenterHeaderGroups')
+      getMemoOptions(table.options, debug, 'getCenterHeaderGroups'),
     )
 
     table.getLeftHeaderGroups = memo(
       () => [
         table.getAllColumns(),
         table.getVisibleLeafColumns(),
-        table.getState().columnPinning.left,
+        table.getState().columnPinning?.left,
       ],
       (allColumns, leafColumns, left) => {
         const orderedLeafColumns =
-          left
-            ?.map(columnId => leafColumns.find(d => d.id === columnId)!)
-            .filter(Boolean) ?? []
+          left?.map((columnId) => leafColumns.find((d) => d.id === columnId)!).filter(Boolean) ?? []
 
         return buildHeaderGroups(allColumns, orderedLeafColumns, table, 'left')
       },
-      getMemoOptions(table.options, debug, 'getLeftHeaderGroups')
+      getMemoOptions(table.options, debug, 'getLeftHeaderGroups'),
     )
 
     table.getRightHeaderGroups = memo(
       () => [
         table.getAllColumns(),
         table.getVisibleLeafColumns(),
-        table.getState().columnPinning.right,
+        table.getState().columnPinning?.right,
       ],
       (allColumns, leafColumns, right) => {
         const orderedLeafColumns =
-          right
-            ?.map(columnId => leafColumns.find(d => d.id === columnId)!)
-            .filter(Boolean) ?? []
+          right?.map((columnId) => leafColumns.find((d) => d.id === columnId)!).filter(Boolean) ??
+          []
 
         return buildHeaderGroups(allColumns, orderedLeafColumns, table, 'right')
       },
-      getMemoOptions(table.options, debug, 'getRightHeaderGroups')
+      getMemoOptions(table.options, debug, 'getRightHeaderGroups'),
     )
 
     // Footer Groups
 
     table.getFooterGroups = memo(
       () => [table.getHeaderGroups()],
-      headerGroups => {
+      (headerGroups) => {
         return [...headerGroups].reverse()
       },
-      getMemoOptions(table.options, debug, 'getFooterGroups')
+      getMemoOptions(table.options, debug, 'getFooterGroups'),
     )
 
     table.getLeftFooterGroups = memo(
       () => [table.getLeftHeaderGroups()],
-      headerGroups => {
+      (headerGroups) => {
         return [...headerGroups].reverse()
       },
-      getMemoOptions(table.options, debug, 'getLeftFooterGroups')
+      getMemoOptions(table.options, debug, 'getLeftFooterGroups'),
     )
 
     table.getCenterFooterGroups = memo(
       () => [table.getCenterHeaderGroups()],
-      headerGroups => {
+      (headerGroups) => {
         return [...headerGroups].reverse()
       },
-      getMemoOptions(table.options, debug, 'getCenterFooterGroups')
+      getMemoOptions(table.options, debug, 'getCenterFooterGroups'),
     )
 
     table.getRightFooterGroups = memo(
       () => [table.getRightHeaderGroups()],
-      headerGroups => {
+      (headerGroups) => {
         return [...headerGroups].reverse()
       },
-      getMemoOptions(table.options, debug, 'getRightFooterGroups')
+      getMemoOptions(table.options, debug, 'getRightFooterGroups'),
     )
 
     // Flat Headers
 
     table.getFlatHeaders = memo(
       () => [table.getHeaderGroups()],
-      headerGroups => {
+      (headerGroups) => {
         return headerGroups
-          .map(headerGroup => {
+          .map((headerGroup) => {
             return headerGroup.headers
           })
           .flat()
       },
-      getMemoOptions(table.options, debug, 'getFlatHeaders')
+      getMemoOptions(table.options, debug, 'getFlatHeaders'),
     )
 
     table.getLeftFlatHeaders = memo(
       () => [table.getLeftHeaderGroups()],
-      left => {
+      (left) => {
         return left
-          .map(headerGroup => {
+          .map((headerGroup) => {
             return headerGroup.headers
           })
           .flat()
       },
-      getMemoOptions(table.options, debug, 'getLeftFlatHeaders')
+      getMemoOptions(table.options, debug, 'getLeftFlatHeaders'),
     )
 
     table.getCenterFlatHeaders = memo(
       () => [table.getCenterHeaderGroups()],
-      left => {
+      (left) => {
         return left
-          .map(headerGroup => {
+          .map((headerGroup) => {
             return headerGroup.headers
           })
           .flat()
       },
-      getMemoOptions(table.options, debug, 'getCenterFlatHeaders')
+      getMemoOptions(table.options, debug, 'getCenterFlatHeaders'),
     )
 
     table.getRightFlatHeaders = memo(
       () => [table.getRightHeaderGroups()],
-      left => {
+      (left) => {
         return left
-          .map(headerGroup => {
+          .map((headerGroup) => {
             return headerGroup.headers
           })
           .flat()
       },
-      getMemoOptions(table.options, debug, 'getRightFlatHeaders')
+      getMemoOptions(table.options, debug, 'getRightFlatHeaders'),
     )
 
     // Leaf Headers
 
     table.getCenterLeafHeaders = memo(
       () => [table.getCenterFlatHeaders()],
-      flatHeaders => {
-        return flatHeaders.filter(header => !header.subHeaders?.length)
+      (flatHeaders) => {
+        return flatHeaders.filter((header) => !header.subHeaders?.length)
       },
-      getMemoOptions(table.options, debug, 'getCenterLeafHeaders')
+      getMemoOptions(table.options, debug, 'getCenterLeafHeaders'),
     )
 
     table.getLeftLeafHeaders = memo(
       () => [table.getLeftFlatHeaders()],
-      flatHeaders => {
-        return flatHeaders.filter(header => !header.subHeaders?.length)
+      (flatHeaders) => {
+        return flatHeaders.filter((header) => !header.subHeaders?.length)
       },
-      getMemoOptions(table.options, debug, 'getLeftLeafHeaders')
+      getMemoOptions(table.options, debug, 'getLeftLeafHeaders'),
     )
 
     table.getRightLeafHeaders = memo(
       () => [table.getRightFlatHeaders()],
-      flatHeaders => {
-        return flatHeaders.filter(header => !header.subHeaders?.length)
+      (flatHeaders) => {
+        return flatHeaders.filter((header) => !header.subHeaders?.length)
       },
-      getMemoOptions(table.options, debug, 'getRightLeafHeaders')
+      getMemoOptions(table.options, debug, 'getRightLeafHeaders'),
     )
 
     table.getLeafHeaders = memo(
@@ -471,12 +458,12 @@ export const Headers: TableFeature = {
           ...(center[0]?.headers ?? []),
           ...(right[0]?.headers ?? []),
         ]
-          .map(header => {
+          .map((header) => {
             return header.getLeafHeaders()
           })
           .flat()
       },
-      getMemoOptions(table.options, debug, 'getLeafHeaders')
+      getMemoOptions(table.options, debug, 'getLeafHeaders'),
     )
   },
 }
@@ -485,7 +472,7 @@ export function buildHeaderGroups<TData extends RowData>(
   allColumns: Column<TData, unknown>[],
   columnsToGroup: Column<TData, unknown>[],
   table: Table<TData>,
-  headerFamily?: 'center' | 'left' | 'right'
+  headerFamily?: 'center' | 'left' | 'right',
 ) {
   // Find the max depth of the columns:
   // build the leaf column row
@@ -499,8 +486,8 @@ export function buildHeaderGroups<TData extends RowData>(
     maxDepth = Math.max(maxDepth, depth)
 
     columns
-      .filter(column => column.getIsVisible())
-      .forEach(column => {
+      .filter((column) => column.getIsVisible())
+      .forEach((column) => {
         if (column.columns?.length) {
           findMaxDepth(column.columns, depth + 1)
         }
@@ -511,10 +498,7 @@ export function buildHeaderGroups<TData extends RowData>(
 
   let headerGroups: HeaderGroup<TData>[] = []
 
-  const createHeaderGroup = (
-    headersToGroup: Header<TData, unknown>[],
-    depth: number
-  ) => {
+  const createHeaderGroup = (headersToGroup: Header<TData, unknown>[], depth: number) => {
     // The header group we are creating
     const headerGroup: HeaderGroup<TData> = {
       depth,
@@ -526,7 +510,7 @@ export function buildHeaderGroups<TData extends RowData>(
     const pendingParentHeaders: Header<TData, unknown>[] = []
 
     // Scan each column for parents
-    headersToGroup.forEach(headerToGroup => {
+    headersToGroup.forEach((headerToGroup) => {
       // What is the latest (last) parent column?
 
       const latestPendingParentHeader = [...pendingParentHeaders].reverse()[0]
@@ -545,21 +529,16 @@ export function buildHeaderGroups<TData extends RowData>(
         isPlaceholder = true
       }
 
-      if (
-        latestPendingParentHeader &&
-        latestPendingParentHeader?.column === column
-      ) {
+      if (latestPendingParentHeader && latestPendingParentHeader?.column === column) {
         // This column is repeated. Add it as a sub header to the next batch
         latestPendingParentHeader.subHeaders.push(headerToGroup)
       } else {
         // This is a new header. Let's create it
         const header = createHeader(table, column, {
-          id: [headerFamily, depth, column.id, headerToGroup?.id]
-            .filter(Boolean)
-            .join('_'),
+          id: [headerFamily, depth, column.id, headerToGroup?.id].filter(Boolean).join('_'),
           isPlaceholder,
           placeholderId: isPlaceholder
-            ? `${pendingParentHeaders.filter(d => d.column === column).length}`
+            ? `${pendingParentHeaders.filter((d) => d.column === column).length}`
             : undefined,
           depth,
           index: pendingParentHeaders.length,
@@ -587,7 +566,7 @@ export function buildHeaderGroups<TData extends RowData>(
     createHeader(table, column, {
       depth: maxDepth,
       index,
-    })
+    }),
   )
 
   createHeaderGroup(bottomHeaders, maxDepth - 1)
@@ -599,13 +578,11 @@ export function buildHeaderGroups<TData extends RowData>(
   // })
 
   const recurseHeadersForSpans = (
-    headers: Header<TData, unknown>[]
+    headers: Header<TData, unknown>[],
   ): { colSpan: number; rowSpan: number }[] => {
-    const filteredHeaders = headers.filter(header =>
-      header.column.getIsVisible()
-    )
+    const filteredHeaders = headers.filter((header) => header.column.getIsVisible())
 
-    return filteredHeaders.map(header => {
+    return filteredHeaders.map((header) => {
       let colSpan = 0
       let rowSpan = 0
       let childRowSpans = [0]
@@ -617,7 +594,7 @@ export function buildHeaderGroups<TData extends RowData>(
           ({ colSpan: childColSpan, rowSpan: childRowSpan }) => {
             colSpan += childColSpan
             childRowSpans.push(childRowSpan)
-          }
+          },
         )
       } else {
         colSpan = 1

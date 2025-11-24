@@ -1,13 +1,4 @@
-import {
-  OnChangeFn,
-  Updater,
-  Table,
-  Column,
-  Row,
-  Cell,
-  RowData,
-  TableFeature,
-} from '../types'
+import { OnChangeFn, Updater, Table, Column, Row, Cell, RowData, TableFeature } from '../types'
 import { getMemoOptions, makeStateUpdater, memo } from '../utils'
 
 export type ColumnPinningPosition = false | 'left' | 'right'
@@ -158,9 +149,7 @@ export const ColumnPinning: TableFeature = {
     }
   },
 
-  getDefaultOptions: <TData extends RowData>(
-    table: Table<TData>
-  ): ColumnPinningDefaultOptions => {
+  getDefaultOptions: <TData extends RowData>(table: Table<TData>): ColumnPinningDefaultOptions => {
     return {
       onColumnPinningChange: makeStateUpdater('columnPinning', table),
     }
@@ -168,38 +157,32 @@ export const ColumnPinning: TableFeature = {
 
   createColumn: <TData extends RowData, TValue>(
     column: Column<TData, TValue>,
-    table: Table<TData>
+    table: Table<TData>,
   ): void => {
-    column.pin = position => {
+    column.pin = (position) => {
       const columnIds = column
         .getLeafColumns()
-        .map(d => d.id)
+        .map((d) => d.id)
         .filter(Boolean) as string[]
 
-      table.setColumnPinning(old => {
+      table.setColumnPinning((old) => {
         if (position === 'right') {
           return {
-            left: (old?.left ?? []).filter(d => !columnIds?.includes(d)),
-            right: [
-              ...(old?.right ?? []).filter(d => !columnIds?.includes(d)),
-              ...columnIds,
-            ],
+            left: (old?.left ?? []).filter((d) => !columnIds?.includes(d)),
+            right: [...(old?.right ?? []).filter((d) => !columnIds?.includes(d)), ...columnIds],
           }
         }
 
         if (position === 'left') {
           return {
-            left: [
-              ...(old?.left ?? []).filter(d => !columnIds?.includes(d)),
-              ...columnIds,
-            ],
-            right: (old?.right ?? []).filter(d => !columnIds?.includes(d)),
+            left: [...(old?.left ?? []).filter((d) => !columnIds?.includes(d)), ...columnIds],
+            right: (old?.right ?? []).filter((d) => !columnIds?.includes(d)),
           }
         }
 
         return {
-          left: (old?.left ?? []).filter(d => !columnIds?.includes(d)),
-          right: (old?.right ?? []).filter(d => !columnIds?.includes(d)),
+          left: (old?.left ?? []).filter((d) => !columnIds?.includes(d)),
+          right: (old?.right ?? []).filter((d) => !columnIds?.includes(d)),
         }
       })
     }
@@ -208,21 +191,19 @@ export const ColumnPinning: TableFeature = {
       const leafColumns = column.getLeafColumns()
 
       return leafColumns.some(
-        d =>
+        (d) =>
           (d.columnDef.enablePinning ?? true) &&
-          (table.options.enableColumnPinning ??
-            table.options.enablePinning ??
-            true)
+          (table.options.enableColumnPinning ?? table.options.enablePinning ?? true),
       )
     }
 
     column.getIsPinned = () => {
-      const leafColumnIds = column.getLeafColumns().map(d => d.id)
+      const leafColumnIds = column.getLeafColumns().map((d) => d.id)
 
       const { left, right } = table.getState().columnPinning
 
-      const isLeft = leafColumnIds.some(d => left?.includes(d))
-      const isRight = leafColumnIds.some(d => right?.includes(d))
+      const isLeft = leafColumnIds.some((d) => left?.includes(d))
+      const isRight = leafColumnIds.some((d) => right?.includes(d))
 
       return isLeft ? 'left' : isRight ? 'right' : false
     }
@@ -230,67 +211,61 @@ export const ColumnPinning: TableFeature = {
     column.getPinnedIndex = () => {
       const position = column.getIsPinned()
 
-      return position
-        ? table.getState().columnPinning?.[position]?.indexOf(column.id) ?? -1
-        : 0
+      return position ? (table.getState().columnPinning?.[position]?.indexOf(column.id) ?? -1) : 0
     }
   },
 
-  createRow: <TData extends RowData>(
-    row: Row<TData>,
-    table: Table<TData>
-  ): void => {
+  createRow: <TData extends RowData>(row: Row<TData>, table: Table<TData>): void => {
     row.getCenterVisibleCells = memo(
       () => [
         row._getAllVisibleCells(),
-        table.getState().columnPinning.left,
-        table.getState().columnPinning.right,
+        table.getState().columnPinning?.left,
+        table.getState().columnPinning?.right,
       ],
       (allCells, left, right) => {
         const leftAndRight: string[] = [...(left ?? []), ...(right ?? [])]
 
-        return allCells.filter(d => !leftAndRight.includes(d.column.id))
+        return allCells.filter((d) => !leftAndRight.includes(d.column.id))
       },
-      getMemoOptions(table.options, 'debugRows', 'getCenterVisibleCells')
+      getMemoOptions(table.options, 'debugRows', 'getCenterVisibleCells'),
     )
     row.getLeftVisibleCells = memo(
-      () => [row._getAllVisibleCells(), table.getState().columnPinning.left],
+      () => [row._getAllVisibleCells(), table.getState().columnPinning?.left],
       (allCells, left) => {
         const cells = (left ?? [])
-          .map(columnId => allCells.find(cell => cell.column.id === columnId)!)
+          .map((columnId) => allCells.find((cell) => cell.column.id === columnId)!)
           .filter(Boolean)
-          .map(d => ({ ...d, position: 'left' }) as Cell<TData, unknown>)
+          .map((d) => ({ ...d, position: 'left' }) as Cell<TData, unknown>)
 
         return cells
       },
-      getMemoOptions(table.options, 'debugRows', 'getLeftVisibleCells')
+      getMemoOptions(table.options, 'debugRows', 'getLeftVisibleCells'),
     )
     row.getRightVisibleCells = memo(
-      () => [row._getAllVisibleCells(), table.getState().columnPinning.right],
+      () => [row._getAllVisibleCells(), table.getState().columnPinning?.right],
       (allCells, right) => {
         const cells = (right ?? [])
-          .map(columnId => allCells.find(cell => cell.column.id === columnId)!)
+          .map((columnId) => allCells.find((cell) => cell.column.id === columnId)!)
           .filter(Boolean)
-          .map(d => ({ ...d, position: 'right' }) as Cell<TData, unknown>)
+          .map((d) => ({ ...d, position: 'right' }) as Cell<TData, unknown>)
 
         return cells
       },
-      getMemoOptions(table.options, 'debugRows', 'getRightVisibleCells')
+      getMemoOptions(table.options, 'debugRows', 'getRightVisibleCells'),
     )
   },
 
   createTable: <TData extends RowData>(table: Table<TData>): void => {
-    table.setColumnPinning = updater =>
-      table.options.onColumnPinningChange?.(updater)
+    table.setColumnPinning = (updater) => table.options.onColumnPinningChange?.(updater)
 
-    table.resetColumnPinning = defaultState =>
+    table.resetColumnPinning = (defaultState) =>
       table.setColumnPinning(
         defaultState
           ? getDefaultColumnPinningState()
-          : table.initialState?.columnPinning ?? getDefaultColumnPinningState()
+          : (table.initialState?.columnPinning ?? getDefaultColumnPinningState()),
       )
 
-    table.getIsSomeColumnsPinned = position => {
+    table.getIsSomeColumnsPinned = (position) => {
       const pinningState = table.getState().columnPinning
 
       if (!position) {
@@ -300,37 +275,37 @@ export const ColumnPinning: TableFeature = {
     }
 
     table.getLeftLeafColumns = memo(
-      () => [table.getAllLeafColumns(), table.getState().columnPinning.left],
+      () => [table.getAllLeafColumns(), table.getState().columnPinning?.left],
       (allColumns, left) => {
         return (left ?? [])
-          .map(columnId => allColumns.find(column => column.id === columnId)!)
+          .map((columnId) => allColumns.find((column) => column.id === columnId)!)
           .filter(Boolean)
       },
-      getMemoOptions(table.options, 'debugColumns', 'getLeftLeafColumns')
+      getMemoOptions(table.options, 'debugColumns', 'getLeftLeafColumns'),
     )
 
     table.getRightLeafColumns = memo(
-      () => [table.getAllLeafColumns(), table.getState().columnPinning.right],
+      () => [table.getAllLeafColumns(), table.getState().columnPinning?.right],
       (allColumns, right) => {
         return (right ?? [])
-          .map(columnId => allColumns.find(column => column.id === columnId)!)
+          .map((columnId) => allColumns.find((column) => column.id === columnId)!)
           .filter(Boolean)
       },
-      getMemoOptions(table.options, 'debugColumns', 'getRightLeafColumns')
+      getMemoOptions(table.options, 'debugColumns', 'getRightLeafColumns'),
     )
 
     table.getCenterLeafColumns = memo(
       () => [
         table.getAllLeafColumns(),
-        table.getState().columnPinning.left,
-        table.getState().columnPinning.right,
+        table.getState().columnPinning?.left,
+        table.getState().columnPinning?.right,
       ],
       (allColumns, left, right) => {
         const leftAndRight: string[] = [...(left ?? []), ...(right ?? [])]
 
-        return allColumns.filter(d => !leftAndRight.includes(d.id))
+        return allColumns.filter((d) => !leftAndRight.includes(d.id))
       },
-      getMemoOptions(table.options, 'debugColumns', 'getCenterLeafColumns')
+      getMemoOptions(table.options, 'debugColumns', 'getCenterLeafColumns'),
     )
   },
 }
