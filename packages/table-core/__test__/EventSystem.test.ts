@@ -113,6 +113,8 @@ describe('EventSystem', () => {
       // 触发事件
       await table.dispatchEvent(EventTypes.TABLE_INITIALIZED)
 
+      expect(asyncCompleted).toBe(false)
+
       // 等待异步操作完成
       await new Promise((resolve) => setTimeout(resolve, 20))
 

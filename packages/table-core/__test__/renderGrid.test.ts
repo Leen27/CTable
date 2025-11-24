@@ -35,7 +35,6 @@ describe('RenderGrid Feature', () => {
       renderFallbackValue: null,
       state: {},
       _features: [RenderGrid],
-      containerRef: container,
     })
 
     // 调用渲染方法
@@ -89,10 +88,10 @@ describe('RenderGrid Feature', () => {
       renderFallbackValue: null,
       state: {},
       _features: [RenderGrid],
-      containerRef: container,
     })
 
-    table.render()
+    // 调用渲染方法，传入容器
+    table.render(container)
 
     // 验证表头存在
     const headerCells = container.querySelectorAll('.ts-table-header-cell')
@@ -119,10 +118,10 @@ describe('RenderGrid Feature', () => {
       renderFallbackValue: null,
       state: {},
       _features: [RenderGrid],
-      containerRef: container,
     })
 
-    table.render()
+    // 调用渲染方法，传入容器
+    table.render(container)
 
     // 验证表格容器样式
     const tableContainer = container.querySelector('.ts-table-container') as HTMLElement
