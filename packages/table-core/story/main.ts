@@ -7,6 +7,7 @@ import {
   createTable,
 } from '../src'
 import { EventTypes } from '../src/features/EventSystem'
+import MockData from './mock-data'
 
 type Person = {
   firstName: string
@@ -78,7 +79,7 @@ const columns = [
 
 // Compose in the generic options to the user options
 const resolvedOptions: TableOptionsResolved<Person> = {
-  data,
+  data: MockData,
   columns,
   getCoreRowModel: getCoreRowModel(),
   state: {
