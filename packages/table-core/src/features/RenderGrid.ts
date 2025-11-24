@@ -1,5 +1,6 @@
 import { InitialTableState, RowData, Table, TableFeature, TableState } from '../types'
 import { createElement, setFixedHeight, setFixedWidth, addStylesToElement } from '../utils/dom'
+import { EventTypes } from './EventSystem'
 
 export interface RenderGridState {
   /** 可见行范围 */
@@ -259,6 +260,10 @@ export const RenderGrid: TableFeature = {
       })
 
       console.log(`表格渲染完成: ${rows.length} 行, ${columns.length} 列`)
+
+      table.dispatchEvent(EventTypes.TABLE_MOUNTED, {
+        table,
+      })
     }
   },
 }

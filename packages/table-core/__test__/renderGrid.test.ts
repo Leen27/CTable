@@ -34,7 +34,6 @@ describe('RenderGrid Feature', () => {
       onStateChange: () => {},
       renderFallbackValue: null,
       state: {},
-      _features: [RenderGrid],
     })
 
     // 调用渲染方法
@@ -87,7 +86,6 @@ describe('RenderGrid Feature', () => {
       onStateChange: () => {},
       renderFallbackValue: null,
       state: {},
-      _features: [RenderGrid],
     })
 
     // 调用渲染方法，传入容器
@@ -117,7 +115,6 @@ describe('RenderGrid Feature', () => {
       onStateChange: () => {},
       renderFallbackValue: null,
       state: {},
-      _features: [RenderGrid],
     })
 
     // 调用渲染方法，传入容器

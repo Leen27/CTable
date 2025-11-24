@@ -7,6 +7,7 @@ const EventTypes = {
   TABLE_DESTROYED: 'tableDestroyed',
   TABLE_STATE_CHANGED: 'tableStateChanged',
   TABLE_DATA_CHANGED: 'tableDataChanged',
+  TABLE_MOUNTED: 'tableOnMounted',
 
   // 行级别事件
   ROW_CLICKED: 'rowClicked',
