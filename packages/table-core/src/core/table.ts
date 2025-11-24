@@ -38,6 +38,7 @@ import { RowPinning } from '../features/RowPinning'
 import { RowSelection } from '../features/RowSelection'
 import { RowSorting } from '../features/RowSorting'
 import { RenderGrid } from '../features/RenderGrid'
+import { EventSystem } from '../features/EventSystem'
 
 const builtInFeatures = [
   Headers,
@@ -56,6 +57,7 @@ const builtInFeatures = [
   RowSelection,
   ColumnSizing,
   RenderGrid,
+  EventSystem,
 ] as const
 
 //
@@ -280,6 +282,10 @@ export interface CoreInstance<TData extends RowData> {
    * @link [Guide](https://tanstack.com/table/v8/docs/guide/tables)
    */
   setState: (updater: Updater<TableState>) => void
+  /**
+   * 表格销毁时调用
+   */
+  destroy: () => void
 }
 
 export function createTable<TData extends RowData>(
@@ -501,6 +507,8 @@ export function createTable<TData extends RowData>(
 
       return column
     },
+
+    destroy: () => {},
   }
 
   Object.assign(table, coreInstance)

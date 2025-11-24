@@ -106,6 +106,15 @@ import {
   RenderGridStateOptions,
   RenderGridTableState,
 } from './features/RenderGrid'
+import {
+  EventServiceCell,
+  EventServiceColumn,
+  EventServiceRow,
+  EventSystemInitialTableState,
+  EventSystemInstance,
+  EventSystemOptions,
+  EventSystemTableState,
+} from './features/EventSystem'
 
 import { CoreRow } from './core/row'
 import { PartialKeys, UnionToIntersection } from './utils'
@@ -163,7 +172,8 @@ export interface Table<TData extends RowData>
     ExpandedInstance<TData>,
     PaginationInstance<TData>,
     RowSelectionInstance<TData>,
-    RenderGridInstance<TData> {}
+    RenderGridInstance<TData>,
+    EventSystemInstance<TData> {}
 
 interface FeatureOptions<TData extends RowData>
   extends VisibilityOptions,
@@ -181,7 +191,8 @@ interface FeatureOptions<TData extends RowData>
     RowSelectionOptions<TData>,
     // VirtualOptions<TData>,
     // DomRenderingOptions<TData>
-    RenderGridStateOptions<TData> {}
+    RenderGridStateOptions<TData>,
+    EventSystemOptions<TData> {}
 
 export interface TableOptionsResolved<TData extends RowData>
   extends CoreOptions<TData>,
@@ -209,7 +220,8 @@ export interface TableState
     RowSelectionTableState,
     // VirtualTableState
     // DomRenderingTableState
-    RenderGridTableState {}
+    RenderGridTableState,
+    EventSystemTableState {}
 
 interface CompleteInitialTableState
   extends CoreTableState,
@@ -224,7 +236,8 @@ interface CompleteInitialTableState
     GroupingTableState,
     ColumnSizingTableState,
     PaginationInitialTableState,
-    RenderGridInitialTableState {}
+    RenderGridInitialTableState,
+    EventSystemInitialTableState {}
 
 export interface InitialTableState extends Partial<CompleteInitialTableState> {}
 
@@ -236,7 +249,8 @@ export interface Row<TData extends RowData>
     ColumnFiltersRow<TData>,
     GroupingRow,
     RowSelectionRow,
-    ExpandedRow {}
+    ExpandedRow,
+    EventServiceRow<TData> {}
 
 export interface RowModel<TData extends RowData> {
   rows: Row<TData>[]
@@ -362,11 +376,13 @@ export interface Column<TData extends RowData, TValue = unknown>
     SortingColumn<TData>,
     GroupingColumn<TData>,
     ColumnSizingColumn,
-    ColumnOrderColumn {}
+    ColumnOrderColumn,
+    EventServiceColumn<TData> {}
 
 export interface Cell<TData extends RowData, TValue>
   extends CoreCell<TData, TValue>,
-    GroupingCell {}
+    GroupingCell,
+    EventServiceCell<TData> {}
 
 export interface Header<TData extends RowData, TValue>
   extends CoreHeader<TData, TValue>,

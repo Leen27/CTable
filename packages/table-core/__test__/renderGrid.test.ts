@@ -9,6 +9,7 @@ describe('RenderGrid Feature', () => {
   beforeEach(() => {
     // 创建一个测试容器
     container = document.createElement('div')
+    container.setAttribute('id', 'app')
     container.style.width = '800px'
     container.style.height = '600px'
     document.body.appendChild(container)
@@ -38,7 +39,7 @@ describe('RenderGrid Feature', () => {
     })
 
     // 调用渲染方法
-    table.render()
+    table.render(document.querySelector('#app') as HTMLElement)
 
     // 验证DOM结构
     const tableContainer = container.querySelector('.ts-table-container')
