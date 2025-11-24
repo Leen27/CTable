@@ -37,6 +37,13 @@ const defaultRenderGridState: RenderGridState = {
   scrollTop: 0,
 }
 
+export const flexRender = <TProps extends object>(comp: any, props: TProps) => {
+  if (typeof comp === 'function') {
+    return comp(props)
+  }
+  return comp
+}
+
 export const RenderGrid: TableFeature = {
   getInitialState: (state): RenderGridTableState => {
     return {
@@ -193,25 +200,30 @@ export const RenderGrid: TableFeature = {
         alignItems: 'center',
       })
 
-      columns.forEach((column) => {
-        const headerCell = createElement('div', {
-          className: 'ts-table-header-cell',
-          attributes: {
-            role: 'columnheader',
-            'data-column-id': column.id,
-          },
-          textContent: column.columnDef.header?.toString() || column.id,
-        })
+      // Render table headers
+      table.getHeaderGroups().forEach((headerGroup) => {
+        headerGroup.headers.forEach((header) => {
+          const headerCell = createElement('div', {
+            className: 'ts-table-header-cell',
+            attributes: {
+              role: 'columnheader',
+              'data-header-id': header.id,
+            },
+            textContent: header.isPlaceholder
+              ? ''
+              : flexRender(header.column.columnDef.header, header.getContext()),
+          })
 
-        addStylesToElement(headerCell, {
-          flex: 1,
-          padding: '8px',
-          borderRight: '1px solid #ddd',
-          fontWeight: 'bold',
-          backgroundColor: '#f5f5f5',
-        })
+          addStylesToElement(headerCell, {
+            flex: 1,
+            padding: '8px',
+            borderRight: '1px solid #ddd',
+            fontWeight: 'bold',
+            backgroundColor: '#f5f5f5',
+          })
 
-        headerRow.appendChild(headerCell)
+          headerRow.appendChild(headerCell)
+        })
       })
 
       tableHeader.appendChild(headerRow)

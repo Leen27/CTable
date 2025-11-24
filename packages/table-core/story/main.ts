@@ -81,7 +81,12 @@ const resolvedOptions: TableOptionsResolved<Person> = {
   data,
   columns,
   getCoreRowModel: getCoreRowModel(),
-  state: {}, // Dummy state
+  state: {
+    columnPinning: {
+      left: [],
+      right: [],
+    },
+  }, // Dummy state
   onStateChange: () => {}, // noop
   renderFallbackValue: null,
 }
