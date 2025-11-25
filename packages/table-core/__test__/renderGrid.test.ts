@@ -40,31 +40,31 @@ describe('RenderGrid Feature', () => {
     table.render(document.querySelector('#app') as HTMLElement)
 
     // 验证DOM结构
-    const tableContainer = container.querySelector('.ts-table-container')
+    const tableContainer = container.querySelector('.c-table-container')
     expect(tableContainer).toBeTruthy()
 
-    const tableHeader = container.querySelector('.ts-table-header')
+    const tableHeader = container.querySelector('.c-table-header')
     expect(tableHeader).toBeTruthy()
 
-    const tableBody = container.querySelector('.ts-table-body')
+    const tableBody = container.querySelector('.c-table-body')
     expect(tableBody).toBeTruthy()
 
-    const tableFooter = container.querySelector('.ts-table-footer')
+    const tableFooter = container.querySelector('.c-table-footer')
     expect(tableFooter).toBeTruthy()
 
     // 验证表头
-    const headerCells = container.querySelectorAll('.ts-table-header-cell')
+    const headerCells = container.querySelectorAll('.c-table-header-cell')
     expect(headerCells).toHaveLength(3)
     expect(headerCells[0]?.textContent).toBe('ID')
     expect(headerCells[1]?.textContent).toBe('Name')
     expect(headerCells[2]?.textContent).toBe('Age')
 
     // 验证行数据
-    const rows = container.querySelectorAll('.ts-table-row')
+    const rows = container.querySelectorAll('.c-table-row')
     expect(rows).toHaveLength(2)
 
     // 验证第一行数据
-    const firstRowCells = rows[0]?.querySelectorAll('.ts-table-cell')
+    const firstRowCells = rows[0]?.querySelectorAll('.c-table-cell')
     expect(firstRowCells).toHaveLength(3)
     expect(firstRowCells?.[0]?.textContent).toBe('1')
     expect(firstRowCells?.[1]?.textContent).toBe('John')
@@ -92,11 +92,11 @@ describe('RenderGrid Feature', () => {
     table.render(container)
 
     // 验证表头存在
-    const headerCells = container.querySelectorAll('.ts-table-header-cell')
+    const headerCells = container.querySelectorAll('.c-table-header-cell')
     expect(headerCells).toHaveLength(2)
 
     // 验证没有数据行
-    const rows = container.querySelectorAll('.ts-table-row')
+    const rows = container.querySelectorAll('.c-table-row')
     expect(rows).toHaveLength(0)
   })
 
@@ -121,20 +121,20 @@ describe('RenderGrid Feature', () => {
     table.render(container)
 
     // 验证表格容器样式
-    const tableContainer = container.querySelector('.ts-table-container') as HTMLElement
+    const tableContainer = container.querySelector('.c-table-container') as HTMLElement
     expect(tableContainer.style.display).toBe('flex')
     expect(tableContainer.style.flexDirection).toBe('column')
     expect(tableContainer.style.width).toBe('100%')
     expect(tableContainer.style.height).toBe('100%')
 
     // 验证表头样式
-    const tableHeader = container.querySelector('.ts-table-header') as HTMLElement
+    const tableHeader = container.querySelector('.c-table-header') as HTMLElement
     expect(tableHeader.style.position).toBe('sticky')
     expect(tableHeader.style.top).toBe('0px')
     expect(tableHeader.style.zIndex).toBe('10')
 
     // 验证主体样式
-    const tableBody = container.querySelector('.ts-table-body') as HTMLElement
+    const tableBody = container.querySelector('.c-table-body') as HTMLElement
     expect(tableBody.style.flex).toContain('1')
     expect(tableBody.style.overflow).toBe('auto')
   })

@@ -179,7 +179,7 @@ export const DomRendering: TableFeature = {
     // 默认渲染函数
     const defaultRenderRow = (props: RowRenderProps<TData>): HTMLElement => {
       const rowElement = document.createElement('div')
-      rowElement.className = 'ts-table-row'
+      rowElement.className = 'c-table-row'
       rowElement.setAttribute('data-row-index', props.index.toString())
       rowElement.setAttribute('data-row-id', props.row.id)
 
@@ -212,7 +212,7 @@ export const DomRendering: TableFeature = {
 
     const defaultRenderCell = (props: CellRenderProps<TData>): HTMLElement => {
       const cellElement = document.createElement('div')
-      cellElement.className = 'ts-table-cell'
+      cellElement.className = 'c-table-cell'
       cellElement.setAttribute('data-column-id', props.column.id)
       cellElement.setAttribute('data-row-index', props.row.index.toString())
 
