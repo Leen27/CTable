@@ -6,7 +6,7 @@ import {
   TableOptionsResolved,
   createTable,
 } from '../src'
-import { EventTypes } from '../src/features/EventSystem'
+import { EventTypesEnum } from '../src/core/events'
 import MockData from './mock-data'
 
 type Person = {
@@ -95,7 +95,7 @@ const resolvedOptions: TableOptionsResolved<Person> = {
 // Create a new table
 const table = createTable<Person>(resolvedOptions)
 
-table.addEventListener(EventTypes.TABLE_MOUNTED, (data) => {
+table.addEventListener(EventTypesEnum.TABLE_MOUNTED, (data) => {
   console.log('表格dom 创建', data)
 })
 table.render(document.querySelector('#app') as HTMLElement)
