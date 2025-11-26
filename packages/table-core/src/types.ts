@@ -87,34 +87,13 @@ import {
   RowSelectionRow,
   RowSelectionTableState,
 } from './features/RowSelection'
-// import {
-//   VirtualInstance,
-//   VirtualOptions,
-//   VirtualTableState,
-//   VirtualInitialTableState,
-//   VirtualRow,
-// } from './features/RowVirtual'
-// import {
-//   DomRenderingInstance,
-//   DomRenderingOptions,
-//   DomRenderingTableState,
-//   DomRenderingInitialTableState,
-// } from './features/DomRendering'
 import {
   RenderGridInitialTableState,
   RenderGridInstance,
   RenderGridStateOptions,
   RenderGridTableState,
 } from './features/RenderGrid'
-import {
-  EventServiceCell,
-  EventServiceColumn,
-  EventServiceRow,
-  EventSystemInitialTableState,
-  EventSystemInstance,
-  EventSystemOptions,
-  EventSystemTableState,
-} from './features/EventSystem'
+import { TableEventOptions, TableEventInstance } from './features/TableEvent'
 
 import { CoreRow } from './core/row'
 import { PartialKeys, UnionToIntersection } from './utils'
@@ -173,7 +152,7 @@ export interface Table<TData extends RowData>
     PaginationInstance<TData>,
     RowSelectionInstance<TData>,
     RenderGridInstance<TData>,
-    EventSystemInstance<TData> {}
+    TableEventInstance<TData> {}
 
 interface FeatureOptions<TData extends RowData>
   extends VisibilityOptions,
@@ -192,7 +171,7 @@ interface FeatureOptions<TData extends RowData>
     // VirtualOptions<TData>,
     // DomRenderingOptions<TData>
     RenderGridStateOptions<TData>,
-    EventSystemOptions<TData> {}
+    TableEventOptions<TData> {}
 
 export interface TableOptionsResolved<TData extends RowData>
   extends CoreOptions<TData>,
@@ -218,10 +197,7 @@ export interface TableState
     ColumnSizingTableState,
     PaginationTableState,
     RowSelectionTableState,
-    // VirtualTableState
-    // DomRenderingTableState
-    RenderGridTableState,
-    EventSystemTableState {}
+    RenderGridTableState {}
 
 interface CompleteInitialTableState
   extends CoreTableState,
@@ -236,8 +212,7 @@ interface CompleteInitialTableState
     GroupingTableState,
     ColumnSizingTableState,
     PaginationInitialTableState,
-    RenderGridInitialTableState,
-    EventSystemInitialTableState {}
+    RenderGridInitialTableState {}
 
 export interface InitialTableState extends Partial<CompleteInitialTableState> {}
 
@@ -249,8 +224,7 @@ export interface Row<TData extends RowData>
     ColumnFiltersRow<TData>,
     GroupingRow,
     RowSelectionRow,
-    ExpandedRow,
-    EventServiceRow<TData> {}
+    ExpandedRow {}
 
 export interface RowModel<TData extends RowData> {
   rows: Row<TData>[]
@@ -376,13 +350,11 @@ export interface Column<TData extends RowData, TValue = unknown>
     SortingColumn<TData>,
     GroupingColumn<TData>,
     ColumnSizingColumn,
-    ColumnOrderColumn,
-    EventServiceColumn<TData> {}
+    ColumnOrderColumn {}
 
 export interface Cell<TData extends RowData, TValue>
   extends CoreCell<TData, TValue>,
-    GroupingCell,
-    EventServiceCell<TData> {}
+    GroupingCell {}
 
 export interface Header<TData extends RowData, TValue>
   extends CoreHeader<TData, TValue>,

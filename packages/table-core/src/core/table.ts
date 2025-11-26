@@ -38,7 +38,6 @@ import { RowPinning } from '../features/RowPinning'
 import { RowSelection } from '../features/RowSelection'
 import { RowSorting } from '../features/RowSorting'
 import { RenderGrid } from '../features/RenderGrid'
-import { EventSystem } from '../features/EventSystem'
 
 const builtInFeatures = [
   Headers,
@@ -57,7 +56,6 @@ const builtInFeatures = [
   RowSelection,
   ColumnSizing,
   RenderGrid,
-  EventSystem,
 ] as const
 
 //
