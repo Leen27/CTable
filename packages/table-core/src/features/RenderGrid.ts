@@ -182,6 +182,13 @@ export const RenderGrid: TableFeature = {
         })
       }
 
+      const initBody = () => {
+        tableBody = createElement('div', {
+          className: 'c-table-body',
+          innerHTML: 'body',
+        })
+      }
+
       const initFooter = () => {
         tableFooter = createElement('div', {
           className: 'c-table-footer',
@@ -199,8 +206,10 @@ export const RenderGrid: TableFeature = {
 
       initTableContainer()
       initFooter()
+      initBody()
       initHeader()
       tableContainer?.appendChild(tableHeader!)
+      tableContainer?.appendChild(tableBody!)
       tableContainer?.appendChild(tableFooter!)
       containerRef.appendChild(tableContainer!)
 
