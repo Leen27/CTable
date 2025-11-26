@@ -201,6 +201,9 @@ export const RenderGrid: TableFeature = {
         tableContainer = createElement('div', {
           className: 'c-table-container',
           innerHTML: 'container',
+          attributes: {
+            role: 'root',
+          },
         })
       }
 
