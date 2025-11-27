@@ -1,7 +1,6 @@
 import { InitialTableState, RowData, Table, TableFeature, TableState } from '../types'
 import { createElement, setFixedHeight, setFixedWidth, addStylesToElement } from '../utils/dom'
 // import { EventTypes } from './EventSystem'
-
 export interface RenderGridState {
   /** 可见行范围 */
   visibleRange: { startIndex: number; endIndex: number }
@@ -184,7 +183,7 @@ export const RenderGrid: TableFeature = {
 
       const initBody = () => {
         tableBody = createElement('div', {
-          className: 'c-table-body',
+          className: 'c-table-body bg-[#eee]',
           innerHTML: 'body',
         })
       }

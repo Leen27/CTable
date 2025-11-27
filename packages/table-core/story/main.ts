@@ -1,3 +1,4 @@
+import '../src/index.css'
 import {
   createColumnHelper,
   getCoreRowModel,

@@ -1,16 +1,12 @@
 import { defineConfig } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
+import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [],
-  root: fileURLToPath(new URL('./story', import.meta.url)),
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./story', import.meta.url)),
-    },
-  },
+  plugins: [tailwindcss()],
+  root: fileURLToPath(new URL('./', import.meta.url)),
   server: {
-    open: '/index.html',
+    open: '/story/index.html',
   },
 })

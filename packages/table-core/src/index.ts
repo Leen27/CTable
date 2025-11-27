@@ -49,3 +49,5 @@ export * from './aggregationFns'
 export * from './columnHelper'
 
 export * from './useTable'
+
+import './index.css'
