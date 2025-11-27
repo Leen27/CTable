@@ -53,6 +53,7 @@ export const EventTypesEnum = {
   RENDER_STARTED: 'renderStarted',
   RENDER_COMPLETED: 'renderCompleted',
   VIRTUAL_SCROLL_UPDATED: 'virtualScrollUpdated',
+  TABLE_PARENT_CONTAINER_RESIZE: 'tableParentContainerResize',
 
   // 选择事件
   SELECTION_CHANGED: 'selectionChanged',

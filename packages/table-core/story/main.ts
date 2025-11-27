@@ -83,20 +83,21 @@ const resolvedOptions: TableOptionsResolved<Person> = {
   data: MockData,
   columns,
   getCoreRowModel: getCoreRowModel(),
-  state: {
-    columnPinning: {
-      left: [],
-      right: [],
-    },
-  }, // Dummy state
+  state: {}, // Dummy state
   onStateChange: () => {}, // noop
   renderFallbackValue: null,
 }
 
 // Create a new table
 const table = createTable<Person>(resolvedOptions)
-
+table.setOptions((pre) => ({
+  ...pre,
+  state: { ...table.initialState },
+}))
 table.addEventListener(EventTypesEnum.TABLE_MOUNTED, (data) => {
   console.log('表格dom 创建', data)
 })
 table.render(document.querySelector('#app') as HTMLElement)
+table.addEventListener(EventTypesEnum.TABLE_PARENT_CONTAINER_RESIZE, (data) => {
+  console.log('表格容器变化', data)
+})

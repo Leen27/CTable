@@ -320,7 +320,6 @@ export function createTable<TData extends RowData>(
     ...coreInitialState,
     ...(options.initialState ?? {}),
   } as TableState
-
   table._features.forEach((feature) => {
     initialState = (feature.getInitialState?.(initialState) ?? initialState) as TableState
   })

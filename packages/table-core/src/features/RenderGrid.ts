@@ -1,13 +1,42 @@
+import { EventTypesEnum } from '../core/events'
 import { InitialTableState, RowData, Table, TableFeature, TableState } from '../types'
-import { createElement, setFixedHeight, setFixedWidth, addStylesToElement } from '../utils/dom'
+import {
+  createElement,
+  setFixedHeight,
+  setFixedWidth,
+  addStylesToElement,
+  getElementSize,
+} from '../utils/dom'
 // import { EventTypes } from './EventSystem'
 export interface RenderGridState {
   /** 可见行范围 */
   visibleRange: { startIndex: number; endIndex: number }
-  /** DOM 容器引用 */
-  containerRef: HTMLElement | null
   /** 滚动位置 */
   scrollTop: number
+  /** 表格父容器宽度 */
+  parentContainerWidth: number
+  /** 表格父容器高度 */
+  parentContainerHeight: number
+  /** 容器高度 */
+  containerWidth: number
+  /** 容器高度 */
+  containerHeight: number
+  /** 表格body可见区域宽度 */
+  bodyWidth: number
+  /** 表格body可见区域高度 */
+  bodyHeight: number
+  /** 表格内容实际宽度 */
+  contentWidth: number
+  /** 表格内容实际高度 */
+  contentHeight: number
+  /** 表格头部高度 */
+  headerHeight: number
+  /** 表格头部宽度 */
+  headerWidth: number
+  /** 表格底部高度 */
+  footerHeight: number
+  /** 表格底部宽度 */
+  footerWidth: number
 }
 
 export interface RenderGridTableState {
@@ -23,17 +52,32 @@ export interface RenderGridStateOptions<TData extends RowData> {
   containerRef?: HTMLElement | null
   /** 行高（像素） */
   rowHeight?: number
+  /** 表格最大高度 */
+  maxHeight?: number
 }
 
 export interface RenderGridInstance<TData extends RowData> {
+  /** 创建表格 DOM 元素 */
+  createElement: () => void
   /** 渲染表格入口 */
   render: (container?: HTMLElement) => void
 }
 
 const defaultRenderGridState: RenderGridState = {
   visibleRange: { startIndex: 0, endIndex: 0 },
-  containerRef: null,
   scrollTop: 0,
+  parentContainerWidth: 0,
+  parentContainerHeight: 0,
+  containerWidth: 0,
+  containerHeight: 0,
+  bodyWidth: 0,
+  bodyHeight: 0,
+  contentWidth: 0,
+  contentHeight: 0,
+  headerHeight: 0,
+  headerWidth: 0,
+  footerWidth: 0,
+  footerHeight: 0,
 }
 
 export const flexRender = <TProps extends object>(comp: any, props: TProps) => {
@@ -57,7 +101,6 @@ export const RenderGrid: TableFeature = {
   getDefaultOptions: <TData extends RowData>(): Partial<RenderGridStateOptions<TData>> => {
     return {
       rowHeight: 20,
-      containerRef: null,
     }
   },
 
@@ -67,116 +110,14 @@ export const RenderGrid: TableFeature = {
     let tableHeader: HTMLElement | null = null
     let tableBody: HTMLElement | null = null
     let tableFooter: HTMLElement | null = null
+    let elementCreated = false
 
-    // const init = ({ container }: { container: HTMLElement }) => {
-    //   table.options.containerRef = container
-    //   containerRef = container
+    let ParentCongtainerResizeObserver = null
 
-    //   // 创建表格主容器
-    //   tableContainer = createElement('div', {
-    //     className: 'c-table-container',
-    //     attributes: {
-    //       'data-table-id': 'table',
-    //       role: 'table',
-    //     },
-    //   })
-
-    //   // 创建表格头部容器
-    //   tableHeader = createElement('div', {
-    //     className: 'c-table-header',
-    //     attributes: {
-    //       role: 'rowgroup',
-    //     },
-    //   })
-
-    //   // 创建表格主体容器
-    //   tableBody = createElement('div', {
-    //     className: 'c-table-body',
-    //     attributes: {
-    //       role: 'rowgroup',
-    //     },
-    //   })
-
-    //   // 创建表格底部容器
-    //   tableFooter = createElement('div', {
-    //     className: 'c-table-footer',
-    //     attributes: {
-    //       role: 'rowgroup',
-    //     },
-    //   })
-
-    //   // 设置表格容器样式
-    //   addStylesToElement(tableContainer, {
-    //     display: 'flex',
-    //     flexDirection: 'column',
-    //     width: '100%',
-    //     height: '100%',
-    //     position: 'relative',
-    //   })
-
-    //   // 设置头部样式
-    //   addStylesToElement(tableHeader, {
-    //     display: 'flex',
-    //     flexDirection: 'column',
-    //     position: 'sticky',
-    //     top: 0,
-    //     zIndex: 10,
-    //     backgroundColor: '#f5f5f5',
-    //     borderBottom: '1px solid #ddd',
-    //   })
-
-    //   // 设置主体样式
-    //   addStylesToElement(tableBody, {
-    //     flex: 1,
-    //     overflow: 'auto',
-    //     position: 'relative',
-    //   })
-
-    //   // 设置底部样式
-    //   addStylesToElement(tableFooter, {
-    //     display: 'flex',
-    //     flexDirection: 'column',
-    //     position: 'sticky',
-    //     bottom: 0,
-    //     zIndex: 10,
-    //     backgroundColor: '#f5f5f5',
-    //     borderTop: '1px solid #ddd',
-    //   })
-
-    //   // 将子容器添加到主容器
-    //   tableContainer.appendChild(tableHeader)
-    //   tableContainer.appendChild(tableBody)
-    //   tableContainer.appendChild(tableFooter)
-
-    //   // 将表格容器添加到用户提供的容器
-    //   containerRef.appendChild(tableContainer)
-
-    //   // 设置容器引用到表格状态
-    //   table.setState(
-    //     (old: TableState) =>
-    //       ({
-    //         ...old,
-    //         renderGrid: {
-    //           ...old.renderGrid,
-    //           containerRef: tableBody,
-    //         },
-    //       }) as TableState,
-    //   )
-
-    //   console.log('表格DOM容器创建完成')
-    // }
-
-    table.render = (container?: HTMLElement) => {
-      containerRef = container || table.options.containerRef
-
-      if (!containerRef) {
-        console.warn('没有传入容器的DOM对象: containerRef')
-        return
-      }
-
+    table.createElement = () => {
       const initHeader = () => {
         tableHeader = createElement('div', {
-          className: 'c-table-header',
+          className: 'c-table-header w-full h-full',
           innerHTML: 'header',
         })
       }
@@ -198,8 +139,7 @@ export const RenderGrid: TableFeature = {
       // 初始化表格容器
       const initTableContainer = () => {
         tableContainer = createElement('div', {
-          className: 'c-table-container',
-          innerHTML: 'container',
+          className: 'c-table-container h-full w-full border',
           attributes: {
             role: 'root',
           },
@@ -213,111 +153,59 @@ export const RenderGrid: TableFeature = {
       tableContainer?.appendChild(tableHeader!)
       tableContainer?.appendChild(tableBody!)
       tableContainer?.appendChild(tableFooter!)
+
+      elementCreated = true
+    }
+
+    table.render = (container?: HTMLElement) => {
+      if (!elementCreated) {
+        table.createElement()
+      }
+
+      containerRef = container || table.options.containerRef
+
+      if (!containerRef) {
+        console.warn('没有传入容器的DOM对象: containerRef')
+        return
+      }
+
       containerRef.appendChild(tableContainer!)
 
-      // init({
-      //   container,
-      // })
+      table.dispatchEvent({
+        type: EventTypesEnum.TABLE_MOUNTED,
+      })
 
-      // if (!tableContainer || !tableHeader || !tableBody || !tableFooter) {
-      //   console.warn('表格DOM容器未正确初始化')
-      //   return
-      // }
+      ParentCongtainerResizeObserver = new ResizeObserver(() => {
+        if (!containerRef) return
+        const { width, height } = getElementSize(containerRef)
+        const renderGrid = table.getState().renderGrid
+        renderGrid.parentContainerWidth = width
+        renderGrid.parentContainerHeight = height
 
-      // // 清空现有内容
-      // tableHeader.innerHTML = ''
-      // tableBody.innerHTML = ''
-      // tableFooter.innerHTML = ''
+        table.dispatchEvent({
+          type: EventTypesEnum.TABLE_PARENT_CONTAINER_RESIZE,
+          data: {
+            ...renderGrid,
+          },
+        })
+      })
+      ParentCongtainerResizeObserver.observe(containerRef)
+    }
 
-      // // 渲染表头
-      // const columns = table.getAllLeafColumns()
-      // const headerRow = createElement('div', {
-      //   className: 'c-table-header-row',
-      //   attributes: { role: 'row' },
-      // })
-
-      // addStylesToElement(headerRow, {
-      //   display: 'flex',
-      //   height: '40px',
-      //   alignItems: 'center',
-      // })
-
-      // // Render table headers
-      // table.getHeaderGroups().forEach((headerGroup) => {
-      //   headerGroup.headers.forEach((header) => {
-      //     const headerCell = createElement('div', {
-      //       className: 'c-table-header-cell',
-      //       attributes: {
-      //         role: 'columnheader',
-      //         'data-header-id': header.id,
-      //       },
-      //       textContent: header.isPlaceholder
-      //         ? ''
-      //         : flexRender(header.column.columnDef.header, header.getContext()),
-      //     })
-
-      //     addStylesToElement(headerCell, {
-      //       flex: 1,
-      //       padding: '8px',
-      //       borderRight: '1px solid #ddd',
-      //       fontWeight: 'bold',
-      //       backgroundColor: '#f5f5f5',
-      //     })
-
-      //     headerRow.appendChild(headerCell)
-      //   })
-      // })
-
-      // tableHeader.appendChild(headerRow)
-
-      // // 渲染表格主体内容
-      // const rows = table.getRowModel().rows
-      // rows.forEach((row, index) => {
-      //   const rowElement = createElement('div', {
-      //     className: 'c-table-row',
-      //     attributes: {
-      //       role: 'row',
-      //       'data-row-index': index.toString(),
-      //       'data-row-id': row.id,
-      //     },
-      //   })
-
-      //   addStylesToElement(rowElement, {
-      //     display: 'flex',
-      //     height: `${table.options.rowHeight || 40}px`,
-      //     alignItems: 'center',
-      //     borderBottom: '1px solid #eee',
-      //   })
-
-      //   columns.forEach((column) => {
-      //     const cellValue = row.getValue(column.id)
-      //     const cellElement = createElement('div', {
-      //       className: 'c-table-cell',
-      //       attributes: {
-      //         role: 'cell',
-      //         'data-column-id': column.id,
-      //         'data-row-index': index.toString(),
-      //       },
-      //       textContent: cellValue?.toString() || '',
-      //     })
-
-      //     addStylesToElement(cellElement, {
-      //       flex: 1,
-      //       padding: '8px',
-      //       borderRight: '1px solid #eee',
-      //     })
-
-      //     rowElement.appendChild(cellElement)
-      //   })
-
-      //   tableBody?.appendChild(rowElement)
-      // })
-
-      // console.log(`表格渲染完成: ${rows.length} 行, ${columns.length} 列`)
-
-      // table.dispatchEvent(EventTypes.TABLE_MOUNTED, {
-      //   table,
-      // })
+    const originalDestroy = table.destroy
+    table.destroy = () => {
+      containerRef?.remove()
+      containerRef = null
+      tableContainer?.remove()
+      tableContainer = null
+      tableHeader?.remove()
+      tableHeader = null
+      tableBody?.remove()
+      tableBody = null
+      tableFooter?.remove()
+      tableFooter = null
+      elementCreated = false
+      originalDestroy()
     }
   },
 }
