@@ -61,6 +61,8 @@ export interface RenderGridInstance<TData extends RowData> {
   createElement: () => void
   /** 渲染表格入口 */
   render: (container?: HTMLElement) => void
+  /** 更新容器大小 */
+  updateTableContainerSizeState: () => void
 }
 
 const defaultRenderGridState: RenderGridState = {
@@ -87,6 +89,10 @@ export const flexRender = <TProps extends object>(comp: any, props: TProps) => {
   return comp
 }
 
+/**
+ * 表格容器渲染相关
+ * 包括表格容器的Dom创建, 更新大小, 监听大小变化等
+ */
 export const RenderGrid: TableFeature = {
   getInitialState: (state): RenderGridTableState => {
     return {
@@ -112,7 +118,7 @@ export const RenderGrid: TableFeature = {
     let tableFooter: HTMLElement | null = null
     let elementCreated = false
 
-    let ParentCongtainerResizeObserver = null
+    let ParentCongtainerResizeObserver: ResizeObserver | null = null
 
     table.createElement = () => {
       const initHeader = () => {
@@ -157,6 +163,39 @@ export const RenderGrid: TableFeature = {
       elementCreated = true
     }
 
+    table.updateTableContainerSizeState = () => {
+      if (!containerRef) return
+      const renderGrid = table.getState().renderGrid
+
+      const { width, height } = getElementSize(containerRef)
+      renderGrid.parentContainerWidth = width
+      renderGrid.parentContainerHeight = height
+
+      if (tableHeader) {
+        const { width, height } = getElementSize(tableHeader)
+        renderGrid.headerWidth = width
+        renderGrid.headerHeight = height
+      }
+
+      if (tableFooter) {
+        const { width, height } = getElementSize(tableFooter)
+        renderGrid.footerWidth = width
+        renderGrid.footerHeight = height
+      }
+
+      if (tableBody) {
+        const { width, height } = getElementSize(tableBody)
+        renderGrid.bodyWidth = width
+        renderGrid.bodyHeight = height
+      }
+
+      if (tableContainer) {
+        const { width, height } = getElementSize(tableContainer)
+        renderGrid.containerWidth = width
+        renderGrid.containerHeight = height
+      }
+    }
+
     table.render = (container?: HTMLElement) => {
       if (!elementCreated) {
         table.createElement()
@@ -175,17 +214,15 @@ export const RenderGrid: TableFeature = {
         type: EventTypesEnum.TABLE_MOUNTED,
       })
 
+      // 监听容器大小变化
       ParentCongtainerResizeObserver = new ResizeObserver(() => {
-        if (!containerRef) return
-        const { width, height } = getElementSize(containerRef)
-        const renderGrid = table.getState().renderGrid
-        renderGrid.parentContainerWidth = width
-        renderGrid.parentContainerHeight = height
+        // 更新状态中的容器大小
+        table.updateTableContainerSizeState()
 
         table.dispatchEvent({
           type: EventTypesEnum.TABLE_PARENT_CONTAINER_RESIZE,
           data: {
-            ...renderGrid,
+            ...table.getState().renderGrid,
           },
         })
       })
@@ -194,6 +231,8 @@ export const RenderGrid: TableFeature = {
 
     const originalDestroy = table.destroy
     table.destroy = () => {
+      containerRef && ParentCongtainerResizeObserver?.unobserve(containerRef)
+
       containerRef?.remove()
       containerRef = null
       tableContainer?.remove()
@@ -205,6 +244,7 @@ export const RenderGrid: TableFeature = {
       tableFooter?.remove()
       tableFooter = null
       elementCreated = false
+
       originalDestroy()
     }
   },
