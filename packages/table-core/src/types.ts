@@ -99,7 +99,7 @@ import { CoreRow } from './core/row'
 import { PartialKeys, UnionToIntersection } from './utils'
 import { CellContext, CoreCell } from './core/cell'
 import { CoreColumn } from './core/column'
-import { IRenderRowRow } from './features/RenderRow'
+import { IRowRenderRow } from './features/RowRender'
 import { RowEventRow } from './features/RowEvent'
 
 export interface TableFeature<TData extends RowData = any> {
@@ -228,7 +228,7 @@ export interface Row<TData extends RowData>
     RowSelectionRow,
     ExpandedRow,
     RowEventRow<TData>,
-    IRenderRowRow {}
+    IRowRenderRow {}
 
 export interface RowModel<TData extends RowData> {
   rows: Row<TData>[]

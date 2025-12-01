@@ -56,7 +56,7 @@ export interface DomRenderingOptions<TData extends RowData = any> {
   /** 容器引用 */
   containerRef?: HTMLElement | null
   /** 自定义行渲染器 */
-  renderRow?: (props: RowRenderProps<TData>) => HTMLElement
+  RowRender?: (props: RowRenderProps<TData>) => HTMLElement
   /** 自定义单元格渲染器 */
   renderCell?: (props: CellRenderProps<TData>) => HTMLElement
   /** 行样式回调 */
@@ -177,7 +177,7 @@ export const DomRendering: TableFeature = {
     let scrollHandler: (() => void) | null = null
 
     // 默认渲染函数
-    const defaultRenderRow = (props: RowRenderProps<TData>): HTMLElement => {
+    const defaultRowRender = (props: RowRenderProps<TData>): HTMLElement => {
       const rowElement = document.createElement('div')
       rowElement.className = 'c-table-row'
       rowElement.setAttribute('data-row-index', props.index.toString())
@@ -259,7 +259,7 @@ export const DomRendering: TableFeature = {
     }
 
     // 渲染行
-    const renderRow = (row: Row<TData>, index: number) => {
+    const RowRender = (row: Row<TData>, index: number) => {
       const rowDom = row as DomRenderingRow
       const columns = table.getAllColumns()
 
@@ -304,7 +304,7 @@ export const DomRendering: TableFeature = {
       }
 
       // 渲染行元素
-      const rowElement = table.options.renderRow?.(rowProps) || defaultRenderRow(rowProps)
+      const rowElement = table.options.RowRender?.(rowProps) || defaultRowRender(rowProps)
 
       // 存储引用
       const cellElements = new Map(
@@ -407,7 +407,7 @@ export const DomRendering: TableFeature = {
         rowsToRender.forEach((row, offsetIndex) => {
           const actualIndex = visibleRange.startIndex + offsetIndex
           if (!state.renderedRows.has(actualIndex)) {
-            const rowElement = renderRow(row, actualIndex)
+            const rowElement = RowRender(row, actualIndex)
             containerRef!.appendChild(rowElement)
           }
         })
@@ -419,7 +419,7 @@ export const DomRendering: TableFeature = {
         // 全量渲染模式
         table.getRowModel().rows.forEach((row, index) => {
           if (!state.renderedRows.has(index)) {
-            const rowElement = renderRow(row, index)
+            const rowElement = RowRender(row, index)
             containerRef!.appendChild(rowElement)
           }
         })
@@ -521,7 +521,7 @@ export const DomRendering: TableFeature = {
       const row = table.getRowModel().rows[rowIndex]
       if (row && (table.getState() as any).domRendering.renderedRows.has(rowIndex)) {
         cleanupRow(rowIndex)
-        const newElement = renderRow(row, rowIndex)
+        const newElement = RowRender(row, rowIndex)
         containerRef?.appendChild(newElement)
       }
     }
