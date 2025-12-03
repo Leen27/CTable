@@ -86,6 +86,7 @@ const resolvedOptions: TableOptionsResolved<Person> = {
   state: {}, // Dummy state
   onStateChange: () => {}, // noop
   renderFallbackValue: null,
+  maxHeight: 300,
 }
 
 // Create a new table

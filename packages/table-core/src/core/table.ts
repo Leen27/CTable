@@ -39,6 +39,7 @@ import { RowSelection } from '../features/RowSelection'
 import { RowSorting } from '../features/RowSorting'
 import { RenderGrid } from '../features/RenderGrid'
 import { TableEvent } from '../features/TableEvent'
+import { RowRender } from '../features/RowRender'
 
 const builtInFeatures = [
   Headers,
@@ -57,6 +58,7 @@ const builtInFeatures = [
   RowSelection,
   ColumnSizing,
   RenderGrid,
+  RowRender,
   TableEvent,
 ] as const
 

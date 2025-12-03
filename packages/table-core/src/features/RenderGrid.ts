@@ -1,5 +1,5 @@
 import { EventTypesEnum } from '../core/events'
-import { InitialTableState, RowData, Table, TableFeature, TableState } from '../types'
+import { InitialTableState, Row, RowData, Table, TableFeature, TableState } from '../types'
 import {
   createElement,
   setFixedHeight,
@@ -54,6 +54,8 @@ export interface RenderGridStateOptions<TData extends RowData> {
   rowHeight?: number
   /** 表格最大高度 */
   maxHeight?: number
+  /** 计算行高回调 */
+  getRowHeight?: (row: Row<TData>) => number
 }
 
 export interface RenderGridInstance<TData extends RowData> {
@@ -63,6 +65,8 @@ export interface RenderGridInstance<TData extends RowData> {
   render: (container?: HTMLElement) => void
   /** 更新容器大小 */
   updateTableContainerSizeState: () => void
+  /**获取虚拟滚动视口中可见的rows */
+  getViewportRows: () => Row<TData>[]
 }
 
 const defaultRenderGridState: RenderGridState = {
@@ -115,6 +119,7 @@ export const RenderGrid: TableFeature = {
     let tableContainer: HTMLElement | null = null
     let tableHeader: HTMLElement | null = null
     let tableBody: HTMLElement | null = null
+    let tableContent: HTMLElement | null = null
     let tableFooter: HTMLElement | null = null
     let elementCreated = false
 
@@ -133,6 +138,21 @@ export const RenderGrid: TableFeature = {
           className: 'c-table-body bg-[#eee]',
           innerHTML: 'body',
         })
+
+        addStylesToElement(tableBody, {
+          overflow: 'scroll',
+        })
+
+        if (table.options.maxHeight) {
+          tableBody
+        }
+      }
+
+      const initTableContent = () => {
+        tableContent = createElement('div', {
+          className: 'c-table-content relative w-full h-full',
+          innerHTML: 'content',
+        })
       }
 
       const initFooter = () => {
@@ -150,14 +170,20 @@ export const RenderGrid: TableFeature = {
             role: 'root',
           },
         })
+
+        addStylesToElement(tableContainer, {
+          overflow: 'hidden',
+        })
       }
 
       initTableContainer()
       initFooter()
       initBody()
+      initTableContent()
       initHeader()
       tableContainer?.appendChild(tableHeader!)
       tableContainer?.appendChild(tableBody!)
+      tableBody?.appendChild(tableContent!)
       tableContainer?.appendChild(tableFooter!)
 
       elementCreated = true
@@ -196,6 +222,10 @@ export const RenderGrid: TableFeature = {
       }
     }
 
+    table.getViewportRows = () => {
+      return table.getRowModel().rows
+    }
+
     table.render = (container?: HTMLElement) => {
       if (!elementCreated) {
         table.createElement()
@@ -209,6 +239,17 @@ export const RenderGrid: TableFeature = {
       }
 
       containerRef.appendChild(tableContainer!)
+
+      if (table.options.maxHeight) {
+        tableBody!.style.maxHeight = table.options.maxHeight + 'px'
+      }
+
+      table.getViewportRows().forEach((row) => {
+        row.render()
+        tableContent!.appendChild(row.getGui()!)
+      })
+
+      tableContent!.style.height = table.getViewportRows().length * table.options.rowHeight! + 'px'
 
       table.dispatchEvent({
         type: EventTypesEnum.TABLE_MOUNTED,
@@ -241,6 +282,8 @@ export const RenderGrid: TableFeature = {
       tableHeader = null
       tableBody?.remove()
       tableBody = null
+      tableContent?.remove()
+      tableContent = null
       tableFooter?.remove()
       tableFooter = null
       elementCreated = false
