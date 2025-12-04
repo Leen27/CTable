@@ -1,5 +1,7 @@
 // No imports needed for this DOM utility file
 
+import { debounce } from '../utils'
+
 /**
  * This method adds a class to an element and remove that class from all siblings.
  * Useful for toggling state.
@@ -526,4 +528,59 @@ export function createElement<T extends HTMLElement = HTMLElement>(
 // Simple function to create a text node
 export function createTextNode(text: string): Text {
   return document.createTextNode(text)
+}
+
+const addEventListenerOptions = {
+  passive: true,
+}
+
+const supportsScrollend = typeof window == 'undefined' ? true : 'onscrollend' in window
+
+type ObserveOffsetCallBack = (params: { left: number; top: number; isScrolling: boolean }) => void
+
+export const observeElementOffset = <T extends Element>(
+  element: HTMLElement,
+  cb: ObserveOffsetCallBack,
+  options?: {
+    onScrollEnd?: ObserveOffsetCallBack
+    isScrollingResetDelay?: number
+  },
+) => {
+  if (!element) {
+    return
+  }
+  if (!window) {
+    return
+  }
+
+  const scrollEndDebounce = debounce(
+    window,
+    () => {
+      cb({
+        left: element['scrollLeft'],
+        top: element['scrollTop'],
+        isScrolling: false,
+      })
+    },
+    options?.isScrollingResetDelay || 10,
+  )
+
+  const handler = () => {
+    scrollEndDebounce()
+    cb({
+      left: element['scrollLeft'],
+      top: element['scrollTop'],
+      isScrolling: true,
+    })
+  }
+  element.addEventListener('scroll', handler, addEventListenerOptions)
+  if (options?.onScrollEnd) {
+    element.addEventListener('scrollend', scrollEndDebounce, addEventListenerOptions)
+  }
+  return () => {
+    element.removeEventListener('scroll', handler)
+    if (options?.onScrollEnd) {
+      element.removeEventListener('scrollend', scrollEndDebounce)
+    }
+  }
 }

@@ -6,6 +6,7 @@ import {
   setFixedWidth,
   addStylesToElement,
   getElementSize,
+  observeElementOffset,
 } from '../utils/dom'
 // import { EventTypes } from './EventSystem'
 export interface RenderGridState {
@@ -13,6 +14,7 @@ export interface RenderGridState {
   visibleRange: { startIndex: number; endIndex: number }
   /** 滚动位置 */
   scrollTop: number
+  scrollLeft: number
   /** 表格父容器宽度 */
   parentContainerWidth: number
   /** 表格父容器高度 */
@@ -37,6 +39,7 @@ export interface RenderGridState {
   footerHeight: number
   /** 表格底部宽度 */
   footerWidth: number
+  /**viewTop */
 }
 
 export interface RenderGridTableState {
@@ -63,8 +66,12 @@ export interface RenderGridInstance<TData extends RowData> {
   createElement: () => void
   /** 渲染表格入口 */
   render: (container?: HTMLElement) => void
+  /**添加监听事件 */
+  initObserver: () => void
   /** 更新容器大小 */
   updateTableContainerSizeState: () => void
+  /** 更新视图数据 */
+  updateViewState: () => void
   /**获取虚拟滚动视口中可见的rows */
   getViewportRows: () => Row<TData>[]
 }
@@ -72,6 +79,7 @@ export interface RenderGridInstance<TData extends RowData> {
 const defaultRenderGridState: RenderGridState = {
   visibleRange: { startIndex: 0, endIndex: 0 },
   scrollTop: 0,
+  scrollLeft: 0,
   parentContainerWidth: 0,
   parentContainerHeight: 0,
   containerWidth: 0,
@@ -124,6 +132,7 @@ export const RenderGrid: TableFeature = {
     let elementCreated = false
 
     let ParentCongtainerResizeObserver: ResizeObserver | null = null
+    let BodyScrollObserver: (() => void) | null | undefined = null
 
     table.createElement = () => {
       const initHeader = () => {
@@ -255,6 +264,13 @@ export const RenderGrid: TableFeature = {
         type: EventTypesEnum.TABLE_MOUNTED,
       })
 
+      table.initObserver()
+    }
+
+    table.initObserver = () => {
+      if (!containerRef) {
+        return
+      }
       // 监听容器大小变化
       ParentCongtainerResizeObserver = new ResizeObserver(() => {
         // 更新状态中的容器大小
@@ -267,12 +283,22 @@ export const RenderGrid: TableFeature = {
           },
         })
       })
+
       ParentCongtainerResizeObserver.observe(containerRef)
+
+      // 监听body滚动条位置
+      BodyScrollObserver = observeElementOffset(tableBody!, (e) => {
+        console.log(e)
+        const renderGridState = table.getState().renderGrid
+        renderGridState.scrollTop = e.top
+        renderGridState.scrollLeft = e.left
+      })
     }
 
     const originalDestroy = table.destroy
     table.destroy = () => {
       containerRef && ParentCongtainerResizeObserver?.unobserve(containerRef)
+      BodyScrollObserver?.()
 
       containerRef?.remove()
       containerRef = null

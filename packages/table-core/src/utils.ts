@@ -1,27 +1,19 @@
 import { TableOptionsResolved, TableState, Updater } from './types'
 
 export type PartialKeys<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
-export type RequiredKeys<T, K extends keyof T> = Omit<T, K> &
-  Required<Pick<T, K>>
-export type Overwrite<T, U extends { [TKey in keyof T]?: any }> = Omit<
-  T,
-  keyof U
-> &
-  U
+export type RequiredKeys<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>
+export type Overwrite<T, U extends { [TKey in keyof T]?: any }> = Omit<T, keyof U> & U
 
-export type UnionToIntersection<T> = (
-  T extends any ? (x: T) => any : never
-) extends (x: infer R) => any
+export type UnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends (
+  x: infer R,
+) => any
   ? R
   : never
 
 export type IsAny<T, Y, N> = 1 extends 0 & T ? Y : N
 export type IsKnown<T, Y, N> = unknown extends T ? N : Y
 
-type ComputeRange<
-  N extends number,
-  Result extends Array<unknown> = [],
-> = Result['length'] extends N
+type ComputeRange<N extends number, Result extends Array<unknown> = []> = Result['length'] extends N
   ? Result
   : ComputeRange<N, [...Result, Result['length']]>
 type Index40 = ComputeRange<40>[number]
@@ -57,11 +49,7 @@ export type DeepKeys<T, TDepth extends any[] = []> = TDepth['length'] extends 5
             ? (keyof T & string) | DeepKeysPrefix<T, keyof T, TDepth>
             : never
 
-type DeepKeysPrefix<
-  T,
-  TPrefix,
-  TDepth extends any[],
-> = TPrefix extends keyof T & (number | string)
+type DeepKeysPrefix<T, TPrefix, TDepth extends any[]> = TPrefix extends keyof T & (number | string)
   ? `${TPrefix}.${DeepKeys<T[TPrefix], [...TDepth, any]> & string}`
   : never
 
@@ -79,19 +67,14 @@ export type Getter<TValue> = <TTValue = TValue>() => NoInfer<TTValue>
 ///
 
 export function functionalUpdate<T>(updater: Updater<T>, input: T): T {
-  return typeof updater === 'function'
-    ? (updater as (input: T) => T)(input)
-    : updater
+  return typeof updater === 'function' ? (updater as (input: T) => T)(input) : updater
 }
 
 export function noop() {
   //
 }
 
-export function makeStateUpdater<K extends keyof TableState>(
-  key: K,
-  instance: unknown
-) {
+export function makeStateUpdater<K extends keyof TableState>(key: K, instance: unknown) {
   return (updater: Updater<TableState[K]>) => {
     ;(instance as any).setState(<TTableState>(old: TTableState) => {
       return {
@@ -109,17 +92,14 @@ export function isFunction<T extends AnyFunction>(d: any): d is T {
 }
 
 export function isNumberArray(d: any): d is number[] {
-  return Array.isArray(d) && d.every(val => typeof val === 'number')
+  return Array.isArray(d) && d.every((val) => typeof val === 'number')
 }
 
-export function flattenBy<TNode>(
-  arr: TNode[],
-  getChildren: (item: TNode) => TNode[]
-) {
+export function flattenBy<TNode>(arr: TNode[], getChildren: (item: TNode) => TNode[]) {
   const flat: TNode[] = []
 
   const recurse = (subArr: TNode[]) => {
-    subArr.forEach(item => {
+    subArr.forEach((item) => {
       flat.push(item)
       const children = getChildren(item)
       if (children?.length) {
@@ -140,12 +120,12 @@ export function memo<TDeps extends readonly any[], TDepArgs, TResult>(
     key: any
     debug?: () => any
     onChange?: (result: TResult) => void
-  }
+  },
 ): (depArgs?: TDepArgs) => TResult {
   let deps: any[] = []
   let result: TResult | undefined
 
-  return depArgs => {
+  return (depArgs) => {
     let depTime: number
     if (opts.key && opts.debug) depTime = Date.now()
 
@@ -188,9 +168,9 @@ export function memo<TDeps extends readonly any[], TDepArgs, TResult>(
             font-weight: bold;
             color: hsl(${Math.max(
               0,
-              Math.min(120 - 120 * resultFpsPercentage, 120)
+              Math.min(120 - 120 * resultFpsPercentage, 120),
             )}deg 100% 31%);`,
-          opts?.key
+          opts?.key,
         )
       }
     }
@@ -209,11 +189,19 @@ export function getMemoOptions(
     | 'debugRows'
     | 'debugHeaders',
   key: string,
-  onChange?: (result: any) => void
+  onChange?: (result: any) => void,
 ) {
   return {
     debug: () => tableOptions?.debugAll ?? tableOptions[debugLevel],
     key: process.env.NODE_ENV === 'development' && key,
     onChange,
+  }
+}
+
+export const debounce = (targetWindow: Window & typeof globalThis, fn: Function, ms: number) => {
+  let timeoutId: number
+  return function (this: any, ...args: Array<any>) {
+    targetWindow.clearTimeout(timeoutId)
+    timeoutId = targetWindow.setTimeout(() => fn.apply(this, args), ms)
   }
 }
