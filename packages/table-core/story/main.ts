@@ -6,9 +6,11 @@ import {
   useTable,
   TableOptionsResolved,
   createTable,
+  TableState,
 } from '../src'
 import { EventTypesEnum } from '../src/core/events'
 import MockData from './mock-data'
+import { createElement } from '../src/utils/dom'
 
 type Person = {
   firstName: string
@@ -83,10 +85,30 @@ const resolvedOptions: TableOptionsResolved<Person> = {
   data: MockData,
   columns,
   getCoreRowModel: getCoreRowModel(),
-  state: {}, // Dummy state
-  onStateChange: () => {}, // noop
+  state: {
+    columnVisibility: {},
+  }, // Dummy state
+  onStateChange: (updater) => {
+    // console.log('yyyyyyyy')
+    if (updater instanceof Function) {
+      table.options.state = updater(table.options.state as TableState)
+    } else {
+      table.options.state = updater
+    }
+  }, // noop
+  // onRenderGridChange: (updater) => {
+  //   console.log(table.getState().renderGrid, 'xxxxxxx')
+  //   document.querySelector('#xxx')!.innerHTML = JSON.stringify(table.options.state.renderGrid)
+
+  //   if (updater instanceof Function) {
+  //     return updater(table.options.state.renderGrid!)
+  //   } else {
+  //     return updater
+  //   }
+  // },
   renderFallbackValue: null,
   maxHeight: 300,
+  debugAll: true,
 }
 
 // Create a new table
@@ -102,3 +124,11 @@ table.render(document.querySelector('#app') as HTMLElement)
 table.addEventListener(EventTypesEnum.TABLE_PARENT_CONTAINER_RESIZE, (data) => {
   console.log('表格容器变化', data)
 })
+
+document.querySelector('#app')?.append(
+  createElement('div', {
+    attributes: {
+      id: 'xxx',
+    },
+  }),
+)

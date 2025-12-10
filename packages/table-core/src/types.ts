@@ -94,12 +94,18 @@ import {
   RenderGridTableState,
 } from './features/RenderGrid'
 import { TableEventOptions, TableEventInstance } from './features/TableEvent'
+import {
+  ITableVirtualInstance,
+  ITableVirtualOptions,
+  VirtualInitialTableState,
+  VirtualTableState,
+} from './features/TableVirtual'
 
 import { CoreRow } from './core/row'
 import { PartialKeys, UnionToIntersection } from './utils'
 import { CellContext, CoreCell } from './core/cell'
 import { CoreColumn } from './core/column'
-import { IRowRenderRow } from './features/RowRender'
+import { IRowRenderRow, RowRenderStateOptions } from './features/RowRender'
 import { RowEventRow } from './features/RowEvent'
 
 export interface TableFeature<TData extends RowData = any> {
@@ -154,6 +160,7 @@ export interface Table<TData extends RowData>
     PaginationInstance<TData>,
     RowSelectionInstance<TData>,
     RenderGridInstance<TData>,
+    ITableVirtualInstance<TData>,
     TableEventInstance<TData> {}
 
 interface FeatureOptions<TData extends RowData>
@@ -173,6 +180,8 @@ interface FeatureOptions<TData extends RowData>
     // VirtualOptions<TData>,
     // DomRenderingOptions<TData>
     RenderGridStateOptions<TData>,
+    RowRenderStateOptions<TData>,
+    ITableVirtualOptions<TData>,
     TableEventOptions<TData> {}
 
 export interface TableOptionsResolved<TData extends RowData>
@@ -199,6 +208,7 @@ export interface TableState
     ColumnSizingTableState,
     PaginationTableState,
     RowSelectionTableState,
+    VirtualTableState,
     RenderGridTableState {}
 
 interface CompleteInitialTableState
@@ -214,7 +224,8 @@ interface CompleteInitialTableState
     GroupingTableState,
     ColumnSizingTableState,
     PaginationInitialTableState,
-    RenderGridInitialTableState {}
+    RenderGridInitialTableState,
+    VirtualInitialTableState {}
 
 export interface InitialTableState extends Partial<CompleteInitialTableState> {}
 

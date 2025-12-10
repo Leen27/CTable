@@ -87,6 +87,9 @@ export const EventTypesEnum = {
 
   // 自定义事件
   CUSTOM_EVENT: 'customEvent',
+
+  // 虚拟滚动事件
+  VIRTUAL_STATE_CHANGE: 'virtaulStateChange',
 } as const
 
 // 基础事件接口

@@ -40,6 +40,7 @@ import { RowSorting } from '../features/RowSorting'
 import { RenderGrid } from '../features/RenderGrid'
 import { TableEvent } from '../features/TableEvent'
 import { RowRender } from '../features/RowRender'
+import { TableVirtual } from '../features/TableVirtual'
 
 const builtInFeatures = [
   Headers,
@@ -60,6 +61,7 @@ const builtInFeatures = [
   RenderGrid,
   RowRender,
   TableEvent,
+  TableVirtual,
 ] as const
 
 //

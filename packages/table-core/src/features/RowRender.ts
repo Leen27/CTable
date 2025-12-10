@@ -4,6 +4,11 @@ import { isFunction } from '../utils'
 import { addStylesToElement, createElement } from '../utils/dom'
 import { isNumber } from '../utils/is'
 
+export interface RowRenderStateOptions<TData extends RowData> {
+  /** 计算行高回调 */
+  getRowHeight?: (row: Row<TData>) => number
+}
+
 export interface IRowRenderState {}
 
 export interface IRowRenderRow {

@@ -1,5 +1,15 @@
 import { EventTypesEnum } from '../core/events'
-import { InitialTableState, Row, RowData, Table, TableFeature, TableState } from '../types'
+import {
+  InitialTableState,
+  OnChangeFn,
+  Row,
+  RowData,
+  Table,
+  TableFeature,
+  TableState,
+  Updater,
+} from '../types'
+import { makeStateUpdater } from '../utils'
 import {
   createElement,
   setFixedHeight,
@@ -57,11 +67,12 @@ export interface RenderGridStateOptions<TData extends RowData> {
   rowHeight?: number
   /** 表格最大高度 */
   maxHeight?: number
-  /** 计算行高回调 */
-  getRowHeight?: (row: Row<TData>) => number
+  /**renderGrid 状态变化回调 */
+  onRenderGridChange?: OnChangeFn<RenderGridState>
 }
 
 export interface RenderGridInstance<TData extends RowData> {
+  setRenderGrid: (updater: Updater<RenderGridState>) => void
   /** 创建表格 DOM 元素 */
   createElement: () => void
   /** 渲染表格入口 */
@@ -116,9 +127,12 @@ export const RenderGrid: TableFeature = {
     }
   },
 
-  getDefaultOptions: <TData extends RowData>(): Partial<RenderGridStateOptions<TData>> => {
+  getDefaultOptions: <TData extends RowData>(
+    table: Table<TData>,
+  ): Partial<RenderGridStateOptions<TData>> => {
     return {
       rowHeight: 20,
+      onRenderGridChange: makeStateUpdater('renderGrid', table),
     }
   },
 
@@ -134,12 +148,16 @@ export const RenderGrid: TableFeature = {
     let ParentCongtainerResizeObserver: ResizeObserver | null = null
     let BodyScrollObserver: (() => void) | null | undefined = null
 
+    table.setRenderGrid = (updater) => table.options.onRenderGridChange?.(updater)
+
     table.createElement = () => {
       const initHeader = () => {
         tableHeader = createElement('div', {
           className: 'c-table-header w-full h-full',
           innerHTML: 'header',
         })
+
+        tableHeader.addEventListener('click', () => console.log(table))
       }
 
       const initBody = () => {
@@ -199,40 +217,45 @@ export const RenderGrid: TableFeature = {
     }
 
     table.updateTableContainerSizeState = () => {
-      if (!containerRef) return
-      const renderGrid = table.getState().renderGrid
+      table.setRenderGrid((old) => {
+        if (!containerRef) return old
 
-      const { width, height } = getElementSize(containerRef)
-      renderGrid.parentContainerWidth = width
-      renderGrid.parentContainerHeight = height
+        const renderGrid = { ...old }
 
-      if (tableHeader) {
-        const { width, height } = getElementSize(tableHeader)
-        renderGrid.headerWidth = width
-        renderGrid.headerHeight = height
-      }
+        const { width, height } = getElementSize(containerRef)
+        renderGrid.parentContainerWidth = width
+        renderGrid.parentContainerHeight = height
 
-      if (tableFooter) {
-        const { width, height } = getElementSize(tableFooter)
-        renderGrid.footerWidth = width
-        renderGrid.footerHeight = height
-      }
+        if (tableHeader) {
+          const { width, height } = getElementSize(tableHeader)
+          renderGrid.headerWidth = width
+          renderGrid.headerHeight = height
+        }
 
-      if (tableBody) {
-        const { width, height } = getElementSize(tableBody)
-        renderGrid.bodyWidth = width
-        renderGrid.bodyHeight = height
-      }
+        if (tableFooter) {
+          const { width, height } = getElementSize(tableFooter)
+          renderGrid.footerWidth = width
+          renderGrid.footerHeight = height
+        }
 
-      if (tableContainer) {
-        const { width, height } = getElementSize(tableContainer)
-        renderGrid.containerWidth = width
-        renderGrid.containerHeight = height
-      }
+        if (tableBody) {
+          const { width, height } = getElementSize(tableBody)
+          renderGrid.bodyWidth = width
+          renderGrid.bodyHeight = height
+        }
+
+        if (tableContainer) {
+          const { width, height } = getElementSize(tableContainer)
+          renderGrid.containerWidth = width
+          renderGrid.containerHeight = height
+        }
+
+        return renderGrid
+      })
     }
 
     table.getViewportRows = () => {
-      return table.getRowModel().rows
+      return table.getVirtualRowModel().rows
     }
 
     table.render = (container?: HTMLElement) => {
@@ -258,7 +281,7 @@ export const RenderGrid: TableFeature = {
         tableContent!.appendChild(row.getGui()!)
       })
 
-      tableContent!.style.height = table.getViewportRows().length * table.options.rowHeight! + 'px'
+      tableContent!.style.height = table.getRowModel().rows.length * table.options.rowHeight! + 'px'
 
       table.dispatchEvent({
         type: EventTypesEnum.TABLE_MOUNTED,
@@ -275,23 +298,22 @@ export const RenderGrid: TableFeature = {
       ParentCongtainerResizeObserver = new ResizeObserver(() => {
         // 更新状态中的容器大小
         table.updateTableContainerSizeState()
-
-        table.dispatchEvent({
-          type: EventTypesEnum.TABLE_PARENT_CONTAINER_RESIZE,
-          data: {
-            ...table.getState().renderGrid,
-          },
-        })
       })
 
       ParentCongtainerResizeObserver.observe(containerRef)
 
       // 监听body滚动条位置
       BodyScrollObserver = observeElementOffset(tableBody!, (e) => {
-        console.log(e)
-        const renderGridState = table.getState().renderGrid
-        renderGridState.scrollTop = e.top
-        renderGridState.scrollLeft = e.left
+        table.setRenderGrid((old) => {
+          const renderGridState = { ...old }
+
+          renderGridState.scrollTop = e.top
+          renderGridState.scrollLeft = e.left
+
+          return renderGridState
+        })
+        console.log(table.getState().renderGrid)
+        table.getVirtualRowModel().rows.forEach((row) => row.render())
       })
     }
 
