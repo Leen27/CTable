@@ -112,6 +112,8 @@ export const RowRender: TableFeature = {
           },
           innerHTML: `index: ${row.index}`,
         })
+
+        table.elRefs.tableContent?.appendChild(row.eGui)
       }
 
       const rowHeightResult = row.getRowHeight()

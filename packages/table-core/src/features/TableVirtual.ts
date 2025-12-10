@@ -1,6 +1,15 @@
 import { EventTypesEnum } from '../core/events'
-import { Row, RowData, RowModel, Table, TableFeature, TableState, Updater } from '../types'
-import { functionalUpdate, getMemoOptions, memo } from '../utils'
+import {
+  OnChangeFn,
+  Row,
+  RowData,
+  RowModel,
+  Table,
+  TableFeature,
+  TableState,
+  Updater,
+} from '../types'
+import { functionalUpdate, getMemoOptions, makeStateUpdater, memo, throttle } from '../utils'
 import { RenderGridState, RenderGridTableState } from './RenderGrid'
 
 export interface IVirtualState {
@@ -40,11 +49,14 @@ export interface ITableVirtualInstance<TData extends RowData> {
   recalculateVirtualRows(): void
   getStartIndex(): number
   getEndIndex(): number
-  setVirtual(updater: Updater<TableState>): void
+  setVirtual(updater: Updater<IVirtualState>): void
   getVirtualRowModel(): RowModel<TData>
+  reCalculateVirtualRange(): void
 }
 
-export interface ITableVirtualOptions<TData extends RowData> {}
+export interface ITableVirtualOptions<TData extends RowData> {
+  onVirtualStateChange?: OnChangeFn<IVirtualState>
+}
 
 export const TableVirtual: TableFeature = {
   getInitialState: (initialState?: VirtualInitialTableState): VirtualTableState => {
@@ -57,7 +69,17 @@ export const TableVirtual: TableFeature = {
     }
   },
 
+  getDefaultOptions: <TData extends RowData>(
+    table: Table<TData>,
+  ): Partial<ITableVirtualOptions<TData>> => {
+    return {
+      onVirtualStateChange: makeStateUpdater('virtual', table),
+    }
+  },
+
   createTable: <TData extends RowData>(table: Table<TData>): void => {
+    table.setVirtual = (updater: Updater<IVirtualState>) =>
+      table.options.onVirtualStateChange?.(updater)
     table._calculateVirtualRange = (
       scrollTop: number,
       viewportHeight: number,
@@ -79,7 +101,6 @@ export const TableVirtual: TableFeature = {
     table.getVirtualRowModel = memo(
       () => [table.getState().renderGrid, table.getState().virtual, table.getRowModel()],
       (renderGrid: RenderGridState, virtual: IVirtualState, rowModel: RowModel<TData>) => {
-        console.log('123')
         if (renderGrid.bodyHeight === 0) {
           return {
             rows: [],
@@ -106,41 +127,34 @@ export const TableVirtual: TableFeature = {
       },
       getMemoOptions(table.options, 'debugTable', 'getVirtualRowModel'),
     )
-    table.setVirtual = (updater: Updater<TableState>) => {
-      const safeUpdater: Updater<TableState> = (old: TableState) => {
-        let newState = functionalUpdate(updater, old)
-
-        // Calculate virtual indices
-        if (newState.renderGrid.bodyHeight > 0) {
-          const totalRows = table.getVirtualRowModel().rows.length
-          const { startIndex, endIndex } = table._calculateVirtualRange(
-            newState.renderGrid.scrollTop,
-            newState.renderGrid.bodyHeight,
-            totalRows,
-          )
-
-          newState = {
-            ...newState,
-            virtual: {
-              ...newState.virtual,
-              startIndex,
-              endIndex,
-              virtualRows: endIndex - startIndex + 1,
-            },
-          }
-        }
-
-        return newState
-      }
-
-      ;(table.options as any).onVirtualChange?.(safeUpdater)
-    }
-
     table.getStartIndex = () => {
       return (table.getState() as any).virtual.startIndex
     }
     table.getEndIndex = () => {
       return (table.getState() as any).virtual.endIndex
+    }
+
+    table.reCalculateVirtualRange = () => {
+      table.setVirtual((old) => {
+        let virtualState = { ...old }
+        const renderGrid = table.getState().renderGrid
+        if (renderGrid.bodyHeight > 0) {
+          const totalRows = table.getRowModel().rows.length
+
+          const { startIndex, endIndex } = table._calculateVirtualRange(
+            renderGrid.scrollTop,
+            renderGrid.bodyHeight,
+            totalRows,
+          )
+          virtualState = {
+            ...virtualState,
+            startIndex,
+            endIndex,
+            virtualRows: endIndex - startIndex + 1,
+          }
+        }
+        return virtualState
+      })
     }
   },
 }

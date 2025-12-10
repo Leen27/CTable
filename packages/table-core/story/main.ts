@@ -95,17 +95,25 @@ const resolvedOptions: TableOptionsResolved<Person> = {
     } else {
       table.options.state = updater
     }
-  }, // noop
-  // onRenderGridChange: (updater) => {
-  //   console.log(table.getState().renderGrid, 'xxxxxxx')
-  //   document.querySelector('#xxx')!.innerHTML = JSON.stringify(table.options.state.renderGrid)
+  },
+  onRenderGridChange: (updater) => {
+    if (updater instanceof Function) {
+      table.options.state.renderGrid = updater(table.options.state.renderGrid!)
+    } else {
+      table.options.state.renderGrid = updater
+    }
 
-  //   if (updater instanceof Function) {
-  //     return updater(table.options.state.renderGrid!)
-  //   } else {
-  //     return updater
-  //   }
-  // },
+    table.reCalculateVirtualRange()
+  },
+  onVirtualStateChange(updater) {
+    if (updater instanceof Function) {
+      table.options.state.virtual = updater(table.options.state.virtual!)
+    } else {
+      table.options.state.virtual = updater
+    }
+    // table.elRefs.tableContent!.innerHTML = ''
+    table.getVirtualRowModel().rows.forEach((row) => row.render())
+  },
   renderFallbackValue: null,
   maxHeight: 300,
   debugAll: true,
@@ -121,10 +129,6 @@ table.addEventListener(EventTypesEnum.TABLE_MOUNTED, (data) => {
   console.log('表格dom 创建', data)
 })
 table.render(document.querySelector('#app') as HTMLElement)
-table.addEventListener(EventTypesEnum.TABLE_PARENT_CONTAINER_RESIZE, (data) => {
-  console.log('表格容器变化', data)
-})
-
 document.querySelector('#app')?.append(
   createElement('div', {
     attributes: {
@@ -132,3 +136,11 @@ document.querySelector('#app')?.append(
     },
   }),
 )
+new ResizeObserver(() => {
+  // 更新状态中的容器大小
+  table.updateTableContainerSizeState()
+}).observe(table.elRefs.tableBody!)
+table.elRefs.tableBody!.addEventListener('scroll', () => {
+  table.updateTableContainerScrollState()
+  table.reCalculateVirtualRange()
+})

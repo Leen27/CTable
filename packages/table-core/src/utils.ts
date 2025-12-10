@@ -205,3 +205,42 @@ export const debounce = (targetWindow: Window & typeof globalThis, fn: Function,
     timeoutId = targetWindow.setTimeout(() => fn.apply(this, args), ms)
   }
 }
+
+export function throttle<T extends (...args: any[]) => any>(func: T, wait: number): T {
+  let timeout: NodeJS.Timeout | null = null
+  let lastExecTime = 0
+  let lastArgs: Parameters<T> | null = null
+  let lastThis: any
+
+  return function (this: any, ...args: Parameters<T>) {
+    const now = Date.now()
+    const timeSinceLastExec = now - lastExecTime
+
+    // 立即执行第一次
+    if (lastExecTime === 0) {
+      lastExecTime = now
+      func.apply(this, args)
+      return
+    }
+
+    // 已经超过等待时间，立即执行
+    if (timeSinceLastExec >= wait) {
+      lastExecTime = now
+      func.apply(this, args)
+    }
+    // 未超过等待时间，设置定时器
+    else if (!timeout) {
+      lastArgs = args
+      lastThis = this
+
+      timeout = setTimeout(() => {
+        lastExecTime = Date.now()
+        timeout = null
+        if (lastArgs) {
+          func.apply(lastThis, lastArgs)
+          lastArgs = null
+        }
+      }, wait - timeSinceLastExec)
+    }
+  } as T
+}

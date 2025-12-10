@@ -9,14 +9,13 @@ import {
   TableState,
   Updater,
 } from '../types'
-import { makeStateUpdater } from '../utils'
+import { makeStateUpdater, throttle } from '../utils'
 import {
   createElement,
   setFixedHeight,
   setFixedWidth,
   addStylesToElement,
   getElementSize,
-  observeElementOffset,
 } from '../utils/dom'
 // import { EventTypes } from './EventSystem'
 export interface RenderGridState {
@@ -72,15 +71,24 @@ export interface RenderGridStateOptions<TData extends RowData> {
 }
 
 export interface RenderGridInstance<TData extends RowData> {
+  elRefs: {
+    containerRef: HTMLElement | null
+    tableContainer: HTMLElement | null
+    tableHeader: HTMLElement | null
+    tableBody: HTMLElement | null
+    tableContent: HTMLElement | null
+    tableFooter: HTMLElement | null
+    elementCreated: boolean
+  }
   setRenderGrid: (updater: Updater<RenderGridState>) => void
   /** 创建表格 DOM 元素 */
   createElement: () => void
   /** 渲染表格入口 */
   render: (container?: HTMLElement) => void
-  /**添加监听事件 */
-  initObserver: () => void
   /** 更新容器大小 */
   updateTableContainerSizeState: () => void
+  /** 更新容器Scroll数据 */
+  updateTableContainerScrollState: () => void
   /** 更新视图数据 */
   updateViewState: () => void
   /**获取虚拟滚动视口中可见的rows */
@@ -137,53 +145,55 @@ export const RenderGrid: TableFeature = {
   },
 
   createTable: <TData extends RowData>(table: Table<TData>): void => {
-    let containerRef: HTMLElement | null | undefined = null
-    let tableContainer: HTMLElement | null = null
-    let tableHeader: HTMLElement | null = null
-    let tableBody: HTMLElement | null = null
-    let tableContent: HTMLElement | null = null
-    let tableFooter: HTMLElement | null = null
-    let elementCreated = false
+    table.elRefs = {
+      containerRef: null,
+      tableContainer: null,
+      tableHeader: null,
+      tableBody: null,
+      tableContent: null,
+      tableFooter: null,
+      elementCreated: false,
+    }
 
     let ParentCongtainerResizeObserver: ResizeObserver | null = null
-    let BodyScrollObserver: (() => void) | null | undefined = null
+    let removeBodyScrollObserver: (() => void) | null | undefined = null
 
     table.setRenderGrid = (updater) => table.options.onRenderGridChange?.(updater)
 
     table.createElement = () => {
       const initHeader = () => {
-        tableHeader = createElement('div', {
+        table.elRefs.tableHeader = createElement('div', {
           className: 'c-table-header w-full h-full',
           innerHTML: 'header',
         })
 
-        tableHeader.addEventListener('click', () => console.log(table))
+        table.elRefs.tableHeader.addEventListener('click', () => console.log(table))
       }
 
       const initBody = () => {
-        tableBody = createElement('div', {
+        table.elRefs.tableBody = createElement('div', {
           className: 'c-table-body bg-[#eee]',
           innerHTML: 'body',
         })
 
-        addStylesToElement(tableBody, {
+        addStylesToElement(table.elRefs.tableBody, {
           overflow: 'scroll',
         })
 
         if (table.options.maxHeight) {
-          tableBody
+          table.elRefs.tableBody
         }
       }
 
       const initTableContent = () => {
-        tableContent = createElement('div', {
+        table.elRefs.tableContent = createElement('div', {
           className: 'c-table-content relative w-full h-full',
           innerHTML: 'content',
         })
       }
 
       const initFooter = () => {
-        tableFooter = createElement('div', {
+        table.elRefs.tableFooter = createElement('div', {
           className: 'c-table-footer',
           innerHTML: 'footer',
         })
@@ -191,14 +201,14 @@ export const RenderGrid: TableFeature = {
 
       // 初始化表格容器
       const initTableContainer = () => {
-        tableContainer = createElement('div', {
+        table.elRefs.tableContainer = createElement('div', {
           className: 'c-table-container h-full w-full border',
           attributes: {
             role: 'root',
           },
         })
 
-        addStylesToElement(tableContainer, {
+        addStylesToElement(table.elRefs.tableContainer, {
           overflow: 'hidden',
         })
       }
@@ -208,44 +218,44 @@ export const RenderGrid: TableFeature = {
       initBody()
       initTableContent()
       initHeader()
-      tableContainer?.appendChild(tableHeader!)
-      tableContainer?.appendChild(tableBody!)
-      tableBody?.appendChild(tableContent!)
-      tableContainer?.appendChild(tableFooter!)
+      table.elRefs.tableContainer?.appendChild(table.elRefs.tableHeader!)
+      table.elRefs.tableContainer?.appendChild(table.elRefs.tableBody!)
+      table.elRefs.tableBody?.appendChild(table.elRefs.tableContent!)
+      table.elRefs.tableContainer?.appendChild(table.elRefs.tableFooter!)
 
-      elementCreated = true
+      table.elRefs.elementCreated = true
     }
 
     table.updateTableContainerSizeState = () => {
       table.setRenderGrid((old) => {
-        if (!containerRef) return old
+        if (!table.elRefs.containerRef) return old
 
         const renderGrid = { ...old }
 
-        const { width, height } = getElementSize(containerRef)
+        const { width, height } = getElementSize(table.elRefs.containerRef)
         renderGrid.parentContainerWidth = width
         renderGrid.parentContainerHeight = height
 
-        if (tableHeader) {
-          const { width, height } = getElementSize(tableHeader)
+        if (table.elRefs.tableHeader) {
+          const { width, height } = getElementSize(table.elRefs.tableHeader)
           renderGrid.headerWidth = width
           renderGrid.headerHeight = height
         }
 
-        if (tableFooter) {
-          const { width, height } = getElementSize(tableFooter)
+        if (table.elRefs.tableFooter) {
+          const { width, height } = getElementSize(table.elRefs.tableFooter)
           renderGrid.footerWidth = width
           renderGrid.footerHeight = height
         }
 
-        if (tableBody) {
-          const { width, height } = getElementSize(tableBody)
+        if (table.elRefs.tableBody) {
+          const { width, height } = getElementSize(table.elRefs.tableBody)
           renderGrid.bodyWidth = width
           renderGrid.bodyHeight = height
         }
 
-        if (tableContainer) {
-          const { width, height } = getElementSize(tableContainer)
+        if (table.elRefs.tableContainer) {
+          const { width, height } = getElementSize(table.elRefs.tableContainer)
           renderGrid.containerWidth = width
           renderGrid.containerHeight = height
         }
@@ -254,87 +264,67 @@ export const RenderGrid: TableFeature = {
       })
     }
 
+    table.updateTableContainerScrollState = () => {
+      table.setRenderGrid((old) => {
+        const renderGridState = { ...old }
+
+        renderGridState.scrollTop = table.elRefs.tableBody!['scrollTop']
+        renderGridState.scrollLeft = table.elRefs.tableBody!['scrollLeft']
+
+        return renderGridState
+      })
+    }
+
     table.getViewportRows = () => {
       return table.getVirtualRowModel().rows
     }
 
     table.render = (container?: HTMLElement) => {
-      if (!elementCreated) {
-        table.createElement()
-      }
+      table.elRefs.containerRef = container || table.options.containerRef || null
 
-      containerRef = container || table.options.containerRef
-
-      if (!containerRef) {
+      if (!table.elRefs.containerRef) {
         console.warn('没有传入容器的DOM对象: containerRef')
         return
       }
 
-      containerRef.appendChild(tableContainer!)
+      if (!table.elRefs.elementCreated) {
+        table.createElement()
+      }
+
+      table.elRefs.containerRef.appendChild(table.elRefs.tableContainer!)
 
       if (table.options.maxHeight) {
-        tableBody!.style.maxHeight = table.options.maxHeight + 'px'
+        table.elRefs.tableBody!.style.maxHeight = table.options.maxHeight + 'px'
       }
 
       table.getViewportRows().forEach((row) => {
         row.render()
-        tableContent!.appendChild(row.getGui()!)
+        table.elRefs.tableContent!.appendChild(row.getGui()!)
       })
 
-      tableContent!.style.height = table.getRowModel().rows.length * table.options.rowHeight! + 'px'
+      table.elRefs.tableContent!.style.height =
+        table.getRowModel().rows.length * table.options.rowHeight! + 'px'
 
       table.dispatchEvent({
         type: EventTypesEnum.TABLE_MOUNTED,
-      })
-
-      table.initObserver()
-    }
-
-    table.initObserver = () => {
-      if (!containerRef) {
-        return
-      }
-      // 监听容器大小变化
-      ParentCongtainerResizeObserver = new ResizeObserver(() => {
-        // 更新状态中的容器大小
-        table.updateTableContainerSizeState()
-      })
-
-      ParentCongtainerResizeObserver.observe(containerRef)
-
-      // 监听body滚动条位置
-      BodyScrollObserver = observeElementOffset(tableBody!, (e) => {
-        table.setRenderGrid((old) => {
-          const renderGridState = { ...old }
-
-          renderGridState.scrollTop = e.top
-          renderGridState.scrollLeft = e.left
-
-          return renderGridState
-        })
-        console.log(table.getState().renderGrid)
-        table.getVirtualRowModel().rows.forEach((row) => row.render())
       })
     }
 
     const originalDestroy = table.destroy
     table.destroy = () => {
-      containerRef && ParentCongtainerResizeObserver?.unobserve(containerRef)
-      BodyScrollObserver?.()
-
-      containerRef?.remove()
-      containerRef = null
-      tableContainer?.remove()
-      tableContainer = null
-      tableHeader?.remove()
-      tableHeader = null
-      tableBody?.remove()
-      tableBody = null
-      tableContent?.remove()
-      tableContent = null
-      tableFooter?.remove()
-      tableFooter = null
-      elementCreated = false
+      table.elRefs.containerRef?.remove()
+      table.elRefs.containerRef = null
+      table.elRefs.tableContainer?.remove()
+      table.elRefs.tableContainer = null
+      table.elRefs.tableHeader?.remove()
+      table.elRefs.tableHeader = null
+      table.elRefs.tableBody?.remove()
+      table.elRefs.tableBody = null
+      table.elRefs.tableContent?.remove()
+      table.elRefs.tableContent = null
+      table.elRefs.tableFooter?.remove()
+      table.elRefs.tableFooter = null
+      table.elRefs.elementCreated = false
 
       originalDestroy()
     }
