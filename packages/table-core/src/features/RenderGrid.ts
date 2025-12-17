@@ -68,6 +68,8 @@ export interface RenderGridStateOptions<TData extends RowData> {
   maxHeight?: number
   /**renderGrid 状态变化回调 */
   onRenderGridChange?: OnChangeFn<RenderGridState>
+  /** 初始化滚动距离 */
+  initialOffset?: number
 }
 
 export interface RenderGridInstance<TData extends RowData> {
@@ -93,6 +95,8 @@ export interface RenderGridInstance<TData extends RowData> {
   updateViewState: () => void
   /**获取虚拟滚动视口中可见的rows */
   getViewportRows: () => Row<TData>[]
+  /** 获取视图容器高度 */
+  getViewportHeight: () => number
 }
 
 const defaultRenderGridState: RenderGridState = {
@@ -140,6 +144,7 @@ export const RenderGrid: TableFeature = {
   ): Partial<RenderGridStateOptions<TData>> => {
     return {
       rowHeight: 20,
+      initialOffset: 0,
       onRenderGridChange: makeStateUpdater('renderGrid', table),
     }
   },
@@ -277,6 +282,10 @@ export const RenderGrid: TableFeature = {
 
     table.getViewportRows = () => {
       return table.getVirtualRowModel().rows
+    }
+
+    table.getViewportHeight = () => {
+      return table.elRefs.tableBody?.clientHeight || 0
     }
 
     table.render = (container?: HTMLElement) => {

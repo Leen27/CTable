@@ -20,7 +20,6 @@ export * from './features/RowExpanding'
 export * from './features/RowPagination'
 export * from './features/RowSelection'
 export * from './features/ColumnSizing'
-export * from './features/RowVirtual'
 export * from './features/TableEvent'
 
 // Utils

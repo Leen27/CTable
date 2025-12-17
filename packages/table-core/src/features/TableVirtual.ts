@@ -12,15 +12,27 @@ import {
 import { functionalUpdate, getMemoOptions, makeStateUpdater, memo, throttle } from '../utils'
 import { RenderGridState, RenderGridTableState } from './RenderGrid'
 
+export interface Rect {
+  width: number
+  height: number
+}
+
+type Key = number | string | bigint
+export interface IVirtualItem {
+  key: Key
+  index: number
+  start: number
+  end: number
+  size: number
+}
 export interface IVirtualState {
-  overscan: number
   startIndex: number
   endIndex: number
   virtualRows: number
   /** 行高缓存（用于动态行高） */
-  rowHeightCache?: Map<string, number>
+  rowHeightCache: Map<Key, number>
   /** 累计偏移缓存 */
-  offsetCache?: number[]
+  offsetCache: number[]
 }
 
 export interface VirtualTableState {
@@ -32,7 +44,6 @@ export interface VirtualInitialTableState {
 }
 
 const defaultVirtualState: IVirtualState = {
-  overscan: 5,
   startIndex: 0,
   endIndex: 0,
   virtualRows: 0,
@@ -40,22 +51,32 @@ const defaultVirtualState: IVirtualState = {
   offsetCache: [],
 }
 
+export interface ITableVirtualOptions<TData extends RowData> {
+  onVirtualStateChange?: OnChangeFn<IVirtualState>
+  initialRect?: Rect
+  overscan?: number
+  horizontal?: boolean
+  getItemKey?: (index: number) => Key
+  initialMeasurementsCache?: Array<IVirtualItem>
+}
+
 export interface ITableVirtualInstance<TData extends RowData> {
-  _calculateVirtualRange: (
-    scrollTop: number,
-    viewportHeight: number,
-    totalRows: number,
-  ) => { startIndex: number; endIndex: number }
+  calculateRange: () => void
   recalculateVirtualRows(): void
   getStartIndex(): number
   getEndIndex(): number
   setVirtual(updater: Updater<IVirtualState>): void
   getVirtualRowModel(): RowModel<TData>
   reCalculateVirtualRange(): void
-}
-
-export interface ITableVirtualOptions<TData extends RowData> {
-  onVirtualStateChange?: OnChangeFn<IVirtualState>
+  getMeasurementOptions(): {
+    count: number
+    paddingStart: number
+    scrollMargin: number
+    getItemKey: (index: number) => Key
+    enabled: boolean
+  }
+  willUpdateVirtual(): void
+  getMeasurements(): Array<IVirtualItem>
 }
 
 export const TableVirtual: TableFeature = {
@@ -73,31 +94,93 @@ export const TableVirtual: TableFeature = {
     table: Table<TData>,
   ): Partial<ITableVirtualOptions<TData>> => {
     return {
+      overscan: 5,
+      horizontal: false,
+      initialRect: { width: 0, height: 0 },
       onVirtualStateChange: makeStateUpdater('virtual', table),
+      initialMeasurementsCache: [],
     }
   },
 
   createTable: <TData extends RowData>(table: Table<TData>): void => {
+    let scrollRect: Rect
+    let measurementsCache: Array<IVirtualItem> = []
+    let pendingMeasuredCacheIndexes: Array<number> = []
+
     table.setVirtual = (updater: Updater<IVirtualState>) =>
       table.options.onVirtualStateChange?.(updater)
-    table._calculateVirtualRange = (
-      scrollTop: number,
-      viewportHeight: number,
-      totalRows: number,
-    ): { startIndex: number; endIndex: number } => {
-      if (totalRows === 0 || viewportHeight === 0) {
-        return { startIndex: 0, endIndex: 0 }
-      }
 
-      const { overscan } = table.getState().virtual
-      const rowHeight = table.options.rowHeight || 20
+    // 获取所有行的偏移数据
+    table.getMeasurements = memo(
+      () => [table.getState().virtual.rowHeightCache],
+      (rowHeightCache) => {
+        if (measurementsCache.length === 0) {
+          measurementsCache = table.options.initialMeasurementsCache || []
+          measurementsCache.forEach((item) => {
+            rowHeightCache.set(item.key, item.size)
+          })
+        }
 
-      const startIndex = Math.max(0, Math.floor(scrollTop / rowHeight) - overscan)
-      const visibleRowCount = Math.ceil(viewportHeight / rowHeight)
-      const endIndex = Math.min(totalRows - 1, startIndex + visibleRowCount + overscan * 2)
+        const min =
+          pendingMeasuredCacheIndexes.length > 0 ? Math.min(...pendingMeasuredCacheIndexes) : 0
+        pendingMeasuredCacheIndexes = []
 
-      return { startIndex, endIndex }
-    }
+        const measurements = measurementsCache.slice(0, min)
+
+        const count = table.getRowModel().rows.length
+
+        for (let i = min; i < count; i++) {
+          const row = table.getRowModel().rows[i]
+          const key = row?.id
+
+          if (!key) continue
+
+          const measurement = measurements[i - 1]
+
+          const start = measurement ? measurement.end : 0
+
+          const measuredSize = rowHeightCache.get(key)
+          const size =
+            typeof measuredSize === 'number' ? measuredSize : row.getRowHeight(true).height
+
+          const end = start + size
+
+          measurements[i] = {
+            index: i,
+            start,
+            size,
+            end,
+            key,
+          }
+        }
+
+        return measurements
+      },
+      getMemoOptions(table.options, 'debugRows', 'getMeasurements'),
+    )
+
+    // 计算范围
+    table.calculateRange = memo(
+      () => [
+        table.getMeasurements(),
+        table.getViewportHeight(),
+        table.getState().renderGrid.scrollTop,
+      ],
+      (measurements, outerSize, scrollOffset) => {
+        table.setVirtual((old) => ({
+          ...old,
+          ...(measurements.length > 0 && outerSize > 0
+            ? _calculateRange({
+                measurements,
+                outerSize,
+                scrollOffset,
+              })
+            : { startIndex: 0, endIndex: 0 }),
+        }))
+      },
+      getMemoOptions(table.options, 'debugRows', 'calculateRange'),
+    )
+
     table.getVirtualRowModel = memo(
       () => [table.getState().renderGrid, table.getState().virtual, table.getRowModel()],
       (renderGrid: RenderGridState, virtual: IVirtualState, rowModel: RowModel<TData>) => {
@@ -128,33 +211,74 @@ export const TableVirtual: TableFeature = {
       getMemoOptions(table.options, 'debugTable', 'getVirtualRowModel'),
     )
     table.getStartIndex = () => {
-      return (table.getState() as any).virtual.startIndex
+      return table.getState().virtual.startIndex
     }
     table.getEndIndex = () => {
-      return (table.getState() as any).virtual.endIndex
+      return table.getState().virtual.endIndex
     }
 
-    table.reCalculateVirtualRange = () => {
-      table.setVirtual((old) => {
-        let virtualState = { ...old }
-        const renderGrid = table.getState().renderGrid
-        if (renderGrid.bodyHeight > 0) {
-          const totalRows = table.getRowModel().rows.length
+    // 虚拟滚动初始化创建入口
+    table.willUpdateVirtual = () => {
+      cleanup()
+    }
 
-          const { startIndex, endIndex } = table._calculateVirtualRange(
-            renderGrid.scrollTop,
-            renderGrid.bodyHeight,
-            totalRows,
-          )
-          virtualState = {
-            ...virtualState,
-            startIndex,
-            endIndex,
-            virtualRows: endIndex - startIndex + 1,
-          }
+    const oldDestroy = table.destroy
+    table.destroy = () => {
+      cleanup()
+      oldDestroy()
+    }
+
+    const cleanup = () => {
+      measurementsCache = []
+      table.getState().virtual.rowHeightCache.clear()
+    }
+
+    function _calculateRange({
+      measurements,
+      outerSize,
+      scrollOffset,
+    }: {
+      measurements: Array<IVirtualItem>
+      outerSize: number
+      scrollOffset: number
+    }) {
+      const lastIndex = measurements.length - 1
+      const getOffset = (index: number) => measurements[index]!.start
+
+      let startIndex = findNearestBinarySearch(0, lastIndex, getOffset, scrollOffset)
+      let endIndex = startIndex
+
+      while (endIndex < lastIndex && measurements[endIndex]!.end < scrollOffset + outerSize) {
+        endIndex++
+      }
+
+      return { startIndex, endIndex }
+    }
+
+    const findNearestBinarySearch = (
+      low: number,
+      high: number,
+      getCurrentValue: (i: number) => number,
+      value: number,
+    ) => {
+      while (low <= high) {
+        const middle = ((low + high) / 2) | 0
+        const currentValue = getCurrentValue(middle)
+
+        if (currentValue < value) {
+          low = middle + 1
+        } else if (currentValue > value) {
+          high = middle - 1
+        } else {
+          return middle
         }
-        return virtualState
-      })
+      }
+
+      if (low > 0) {
+        return low - 1
+      } else {
+        return 0
+      }
     }
   },
 }
