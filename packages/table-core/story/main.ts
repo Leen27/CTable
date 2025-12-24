@@ -132,12 +132,3 @@ document.querySelector('#app')?.append(
     },
   }),
 )
-
-// new ResizeObserver(() => {
-//   // 更新状态中的容器大小
-//   table.updateTableContainerSizeState()
-// }).observe(table.elRefs.tableBody!)
-// table.elRefs.tableBody!.addEventListener('scroll', () => {
-//   table.updateTableContainerScrollState()
-//   table.reCalculateVirtualRange()
-// })
