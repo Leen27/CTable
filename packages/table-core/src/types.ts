@@ -108,6 +108,11 @@ import { CoreColumn } from './core/column'
 import { IRowRenderRow, RowRenderStateOptions } from './features/RowRender'
 import { RowEventRow } from './features/RowEvent'
 
+export type ScrollDirection = 'forward' | 'backward'
+
+export type ScrollAlignment = 'start' | 'center' | 'end' | 'auto'
+
+export type ScrollBehavior = 'auto' | 'smooth'
 export interface TableFeature<TData extends RowData = any> {
   createCell?: (
     cell: Cell<TData, unknown>,

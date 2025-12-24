@@ -1,29 +1,28 @@
 import { EventTypesEnum } from '../core/events'
 import {
-  InitialTableState,
   OnChangeFn,
   Row,
   RowData,
+  ScrollDirection,
   Table,
   TableFeature,
-  TableState,
   Updater,
 } from '../types'
-import { makeStateUpdater, throttle } from '../utils'
+import { makeStateUpdater } from '../utils'
 import {
   createElement,
-  setFixedHeight,
-  setFixedWidth,
   addStylesToElement,
   getElementSize,
 } from '../utils/dom'
-// import { EventTypes } from './EventSystem'
+
 export interface RenderGridState {
   /** 可见行范围 */
   visibleRange: { startIndex: number; endIndex: number }
   /** 滚动位置 */
   scrollTop: number
   scrollLeft: number
+  /**滚动方向 */
+  scrollDirection: ScrollDirection | null
   /** 表格父容器宽度 */
   parentContainerWidth: number
   /** 表格父容器高度 */
@@ -62,7 +61,7 @@ export interface RenderGridInitialTableState {
 export interface RenderGridStateOptions<TData extends RowData> {
   /** 容器引用 */
   containerRef?: HTMLElement | null
-  /** 行高（像素） */
+  /** 默认行高（像素）会用于预估计算 */
   rowHeight?: number
   /** 表格最大高度 */
   maxHeight?: number
@@ -103,6 +102,7 @@ const defaultRenderGridState: RenderGridState = {
   visibleRange: { startIndex: 0, endIndex: 0 },
   scrollTop: 0,
   scrollLeft: 0,
+  scrollDirection: null,
   parentContainerWidth: 0,
   parentContainerHeight: 0,
   containerWidth: 0,
@@ -160,9 +160,6 @@ export const RenderGrid: TableFeature = {
       elementCreated: false,
     }
 
-    let ParentCongtainerResizeObserver: ResizeObserver | null = null
-    let removeBodyScrollObserver: (() => void) | null | undefined = null
-
     table.setRenderGrid = (updater) => table.options.onRenderGridChange?.(updater)
 
     table.createElement = () => {
@@ -178,7 +175,7 @@ export const RenderGrid: TableFeature = {
       const initBody = () => {
         table.elRefs.tableBody = createElement('div', {
           className: 'c-table-body bg-[#eee]',
-          innerHTML: 'body',
+          // innerHTML: 'body',
         })
 
         addStylesToElement(table.elRefs.tableBody, {
@@ -193,7 +190,7 @@ export const RenderGrid: TableFeature = {
       const initTableContent = () => {
         table.elRefs.tableContent = createElement('div', {
           className: 'c-table-content relative w-full h-full',
-          innerHTML: 'content',
+          // innerHTML: 'content',
         })
       }
 

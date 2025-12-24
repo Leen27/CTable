@@ -89,7 +89,6 @@ const resolvedOptions: TableOptionsResolved<Person> = {
     columnVisibility: {},
   }, // Dummy state
   onStateChange: (updater) => {
-    // console.log('yyyyyyyy')
     if (updater instanceof Function) {
       table.options.state = updater(table.options.state as TableState)
     } else {
@@ -102,8 +101,6 @@ const resolvedOptions: TableOptionsResolved<Person> = {
     } else {
       table.options.state.renderGrid = updater
     }
-
-    table.reCalculateVirtualRange()
   },
   onVirtualStateChange(updater) {
     if (updater instanceof Function) {
@@ -111,7 +108,6 @@ const resolvedOptions: TableOptionsResolved<Person> = {
     } else {
       table.options.state.virtual = updater
     }
-    // table.elRefs.tableContent!.innerHTML = ''
     table.getVirtualRowModel().rows.forEach((row) => row.render())
   },
   renderFallbackValue: null,
@@ -125,10 +121,10 @@ table.setOptions((pre) => ({
   ...pre,
   state: { ...table.initialState },
 }))
-table.addEventListener(EventTypesEnum.TABLE_MOUNTED, (data) => {
-  console.log('表格dom 创建', data)
-})
+
 table.render(document.querySelector('#app') as HTMLElement)
+table.willUpdateVirtual()
+
 document.querySelector('#app')?.append(
   createElement('div', {
     attributes: {
@@ -136,11 +132,12 @@ document.querySelector('#app')?.append(
     },
   }),
 )
-new ResizeObserver(() => {
-  // 更新状态中的容器大小
-  table.updateTableContainerSizeState()
-}).observe(table.elRefs.tableBody!)
-table.elRefs.tableBody!.addEventListener('scroll', () => {
-  table.updateTableContainerScrollState()
-  table.reCalculateVirtualRange()
-})
+
+// new ResizeObserver(() => {
+//   // 更新状态中的容器大小
+//   table.updateTableContainerSizeState()
+// }).observe(table.elRefs.tableBody!)
+// table.elRefs.tableBody!.addEventListener('scroll', () => {
+//   table.updateTableContainerScrollState()
+//   table.reCalculateVirtualRange()
+// })

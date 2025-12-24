@@ -47,6 +47,11 @@ export interface IRowRenderRow {
    */
   getRowHeight: (allowEstimate?: boolean) => { height: number; estimated: boolean }
 
+  /**
+   * 计算行高并更新 row 的 高度
+   */
+  calculateRowHeight: () => void
+
   /**设置row 的距离顶部的距离*/
   setRowTop: (topY: number) => void
 
@@ -59,7 +64,7 @@ export interface IRowRenderRow {
 export const RowRender: TableFeature = {
   createRow: <TData extends RowData>(row: Row<TData>, table: Table<TData>): void => {
     row.rowHeightEstimated = false
-    row.rowHeight = table.options.rowHeight || 20
+    row.rowHeight = table.options.rowHeight
     row.displayed = false
     row.rowTop = null
     row.eGui = null
@@ -67,10 +72,6 @@ export const RowRender: TableFeature = {
     row.setRowHeight = (rowHeight: number | undefined | null, estimated: boolean = false): void => {
       row.rowHeight = rowHeight
       row.rowHeightEstimated = estimated
-
-      row.dispatchEvent({
-        type: EventTypesEnum.ROW_HEIGHT_CHANGE,
-      })
     }
 
     row.getRowHeight = (allowEstimate = false) => {
@@ -91,6 +92,13 @@ export const RowRender: TableFeature = {
 
       // 使用默认配置
       return { height: table.options.rowHeight!, estimated: false }
+    }
+
+    row.calculateRowHeight = () => {
+      const newHeight = table.options.rowHeight
+      if (newHeight !== row.rowHeight) {
+        row.setRowHeight(newHeight, false)
+      }
     }
 
     row.setRowTop = (topY: number) => {
