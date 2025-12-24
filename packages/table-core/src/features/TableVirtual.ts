@@ -30,10 +30,6 @@ export interface IVirtualState {
   startIndex: number
   endIndex: number
   virtualRows: number
-  /** 行高缓存（用于动态行高） */
-  rowHeightCache: Map<Key, number>
-  /** 累计偏移缓存 */
-  offsetCache: number[]
 }
 
 export interface VirtualTableState {
@@ -48,9 +44,7 @@ const defaultVirtualState: IVirtualState = {
   isScrolling: false,
   startIndex: 0,
   endIndex: 0,
-  virtualRows: 0,
-  rowHeightCache: new Map(),
-  offsetCache: [],
+  virtualRows: 0
 }
 
 export interface ITableVirtualOptions<TData extends RowData> {
@@ -230,12 +224,12 @@ export const TableVirtual: TableFeature = {
 
     // 获取所有行的偏移数据
     table.getMeasurements = memo(
-      () => [table.getState().virtual.rowHeightCache],
-      (rowHeightCache) => {
+      () => [itemSizeCache],
+      (itemSizeCache) => {
         if (measurementsCache.length === 0) {
           measurementsCache = table.options.initialMeasurementsCache || []
           measurementsCache.forEach((item) => {
-            rowHeightCache.set(item.key, item.size)
+            itemSizeCache.set(item.key, item.size)
           })
         }
 
@@ -257,7 +251,7 @@ export const TableVirtual: TableFeature = {
 
           const start = measurement ? measurement.end : 0
 
-          const measuredSize = rowHeightCache.get(key)
+          const measuredSize = itemSizeCache.get(key)
           const size =
             typeof measuredSize === 'number' ? measuredSize : row.getRowHeight(true).height
 
@@ -388,7 +382,7 @@ export const TableVirtual: TableFeature = {
       unsubs = []
       observer.disconnect()
       measurementsCache = []
-      table.getState().virtual.rowHeightCache.clear()
+      itemSizeCache.clear()
     }
 
     table.destroy = () => {
