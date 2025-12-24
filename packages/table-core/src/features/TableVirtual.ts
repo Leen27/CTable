@@ -60,6 +60,7 @@ export interface ITableVirtualOptions<TData extends RowData> {
   getItemKey?: (index: number) => Key
   initialMeasurementsCache?: Array<IVirtualItem>
   virtualIndexAttribute?: string
+  dynamic?: boolean
   measureElement?: (node: Element, entry: ResizeObserverEntry | undefined, table: Table<TData>) => number
 }
 
@@ -97,6 +98,7 @@ export const TableVirtual: TableFeature = {
     table: Table<TData>,
   ): Partial<ITableVirtualOptions<TData>> => {
     return {
+      dynamic: false,
       overscan: 5,
       initialRect: { width: 0, height: 0 },
       onVirtualStateChange: makeStateUpdater('virtual', table),
