@@ -85,7 +85,7 @@ const resolvedOptions: TableOptionsResolved<Person> = {
   data: MockData,
   columns,
   getCoreRowModel: getCoreRowModel(),
-  dynamic: true,
+  dynamic: false,
   state: {
     columnVisibility: {},
   }, // Dummy state

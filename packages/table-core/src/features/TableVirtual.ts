@@ -226,9 +226,8 @@ export const TableVirtual: TableFeature = {
       return () => viewportResizeObserver.unobserve(element)
     }
 
-    // 内部测量处理
+    // DOM 大小变化回调
     const _measureElement = (node: Element, entry: ResizeObserverEntry | undefined) => {
-      debugger
       const index = indexFromElement(node)
       const item = measurementsCache[index]
       if (!item) {
@@ -252,13 +251,14 @@ export const TableVirtual: TableFeature = {
 
     const observer = createResizeObserver(_measureElement)
 
+    // 滚动到指定位置
+    // 主要用于元素大小变化导致的滚动条抖动
     const _scrollToOffset = (scrollElement: Element, offset: number) => {
       scrollElement?.scrollTo({
         top: offset,
       })
     }
 
-    const oldDestroy = table.destroy
     const cleanup = () => {
       unsubs.filter(Boolean).forEach((d) => d!())
       unsubs = []
@@ -268,7 +268,6 @@ export const TableVirtual: TableFeature = {
     }
 
     const resizeItem = (index: number, size: number) => {
-      debugger
       const item = measurementsCache[index]
       if (!item) {
         return
@@ -293,14 +292,7 @@ export const TableVirtual: TableFeature = {
         // }
         pendingMeasuredCacheIndexes.push(item.index)
         itemSizeCache = new Map(itemSizeCache.set(item.key, size))
-
         table.calculateRange()
-
-        const row = table.getRowModel().rows[item.index]
-        if (!row) return
-        row?.setRowHeight(size, false)
-        row.setRowTop(item.start)
-        row?.render()
       }
     }
 
@@ -398,7 +390,7 @@ export const TableVirtual: TableFeature = {
 
           const measuredSize = itemSizeCache.get(key)
           const size =
-            typeof measuredSize === 'number' ? measuredSize : row.getRowHeight(true).height
+            typeof measuredSize === 'number' ? measuredSize : table.options.rowHeight!
 
           const end = start + size
 
@@ -504,6 +496,7 @@ export const TableVirtual: TableFeature = {
         return
       }
 
+      // 如果之前有缓存
       elementsCache.forEach((cached) => {
         observer.observe(cached)
       })
@@ -531,6 +524,7 @@ export const TableVirtual: TableFeature = {
       )
     }
 
+    const oldDestroy = table.destroy
     table.destroy = () => {
       cleanup()
       oldDestroy()
