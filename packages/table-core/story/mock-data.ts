@@ -230,7 +230,7 @@ const getRandomInt = (min: number, max: number) => Math.floor(Math.random() * (m
 const getRandomFloat = (min: number, max: number) => Math.random() * (max - min) + min
 
 // 生成10000个随机数据
-const data: Person[] = Array.from({ length: 10000 }, (_, index) => ({
+const data: Person[] = Array.from({ length: 2 }, (_, index) => ({
   firstName: firstNames[getRandomInt(0, firstNames.length - 1)]!,
   lastName: lastNames[getRandomInt(0, lastNames.length - 1)]!,
   age: getRandomInt(18, 80),

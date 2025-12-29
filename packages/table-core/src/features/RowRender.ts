@@ -74,6 +74,10 @@ export const RowRender: TableFeature = {
       row.rowHeightEstimated = estimated
     }
 
+    row.setRowTop = (topY: number) => {
+      row.rowTop = topY
+    }
+
     row.getRowHeight = (allowEstimate = false) => {
       if (isFunction(table.options.getRowHeight)) {
         if (allowEstimate) {
@@ -91,7 +95,7 @@ export const RowRender: TableFeature = {
       }
 
       // 使用默认配置
-      return { height: table.options.rowHeight!, estimated: false }
+      return { height: row.rowHeight || table.options.rowHeight!, estimated: false }
     }
 
     row.calculateRowHeight = () => {
@@ -99,12 +103,6 @@ export const RowRender: TableFeature = {
       if (newHeight !== row.rowHeight) {
         row.setRowHeight(newHeight, false)
       }
-    }
-
-    row.setRowTop = (topY: number) => {
-      addStylesToElement(row.eGui, {
-        transform: `translateY(${topY}px)`,
-      })
     }
 
     row.render = () => {
@@ -117,18 +115,22 @@ export const RowRender: TableFeature = {
             role: 'row',
             id: row.id,
             index: row.index + '',
+            [table.options.virtualIndexAttribute!]: row.index + ''
           },
-          innerHTML: `index: ${row.index}`,
+          innerHTML: `<div style="height: ${Math.random() * 100 + 26}px;">index: ${row.index}</div>`,
         })
 
         table.elRefs.tableContent?.appendChild(row.eGui)
+
+        // 监听resize 并更新row 高度
+        table.options.dynamic && table.measureElement(row.eGui)
       }
 
       const rowHeightResult = row.getRowHeight()
       addStylesToElement(row.eGui, {
         height: rowHeightResult.height + 'px',
+        transform: `translateY(${row.rowTop}px)`,
       })
-      row.setRowTop(row.getRowHeight().height * row.index)
     }
 
     row.getGui = () => row.eGui

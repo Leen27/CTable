@@ -9,7 +9,14 @@ import {
   TableState,
   Updater,
 } from '../types'
-import { debounce, functionalUpdate, getMemoOptions, makeStateUpdater, memo, throttle } from '../utils'
+import {
+  debounce,
+  functionalUpdate,
+  getMemoOptions,
+  makeStateUpdater,
+  memo,
+  throttle,
+} from '../utils'
 import { RenderGridState, RenderGridTableState } from './RenderGrid'
 
 export interface Rect {
@@ -44,7 +51,7 @@ const defaultVirtualState: IVirtualState = {
   isScrolling: false,
   startIndex: 0,
   endIndex: 0,
-  virtualRows: 0
+  virtualRows: 0,
 }
 
 export interface ITableVirtualOptions<TData extends RowData> {
@@ -55,7 +62,11 @@ export interface ITableVirtualOptions<TData extends RowData> {
   initialMeasurementsCache?: Array<IVirtualItem>
   virtualIndexAttribute?: string
   dynamic?: boolean
-  measureElement?: (node: Element, entry: ResizeObserverEntry | undefined, table: Table<TData>) => number
+  measureElement?: (
+    node: Element,
+    entry: ResizeObserverEntry | undefined,
+    table: Table<TData>,
+  ) => number
 }
 
 export interface ITableVirtualInstance<TData extends RowData> {
@@ -75,6 +86,7 @@ export interface ITableVirtualInstance<TData extends RowData> {
   willUpdateVirtual(): void
   getMeasurements(): Array<IVirtualItem>
   getVirtualViewportScrolling(): boolean
+  measureElement(node: Element | null | undefined): void
 }
 
 export const TableVirtual: TableFeature = {
@@ -98,7 +110,27 @@ export const TableVirtual: TableFeature = {
       onVirtualStateChange: makeStateUpdater('virtual', table),
       initialMeasurementsCache: [],
       virtualIndexAttribute: 'data-index',
-      measureElement: () => table.options.rowHeight!
+      measureElement: (
+        element,
+        entry,
+        table
+      ) => {
+        if (!table.options.dynamic) {
+          return table.options.rowHeight!
+        }
+
+        if (entry?.borderBoxSize) {
+          const box = entry.borderBoxSize[0]
+          if (box) {
+            const size = Math.round(
+              box.blockSize,
+            )
+            return size
+          }
+        }
+
+        return (element as unknown as HTMLElement).offsetHeight
+      },
     }
   },
 
@@ -142,10 +174,7 @@ export const TableVirtual: TableFeature = {
       }
     }
 
-    const observeElementScroll = <T extends Element>(
-      cb: Function,
-    ) => {
-      debugger
+    const observeElementScroll = <T extends Element>(cb: Function) => {
       const element = table.elRefs.tableBody
       if (!element) {
         return
@@ -158,14 +187,17 @@ export const TableVirtual: TableFeature = {
       const handler = debounce(
         window,
         () => {
-          cb({
-            scrollLeft: element['scrollLeft'],
-            scrollTop: element['scrollTop']
-          }, false)
+          cb(
+            {
+              scrollLeft: element['scrollLeft'],
+              scrollTop: element['scrollTop'],
+            },
+            false,
+          )
         },
         30,
       )
-      
+
       element.addEventListener('scroll', handler, addEventListenerOptions)
 
       return () => {
@@ -179,14 +211,14 @@ export const TableVirtual: TableFeature = {
 
       // 监听容器大小变化
       const viewportResizeObserver = new window.ResizeObserver((entries) => {
-          entries.forEach((entry) => {
-            const run = () => {
-              table.updateTableContainerSizeState()
-              table.updateTableContainerScrollState()
-              cb?.()
-            }
-            requestAnimationFrame(run)
-          })
+        entries.forEach((entry) => {
+          const run = () => {
+            table.updateTableContainerSizeState()
+            table.updateTableContainerScrollState()
+            cb?.()
+          }
+          requestAnimationFrame(run)
+        })
       })
 
       viewportResizeObserver.observe(element)
@@ -196,6 +228,7 @@ export const TableVirtual: TableFeature = {
 
     // 内部测量处理
     const _measureElement = (node: Element, entry: ResizeObserverEntry | undefined) => {
+      debugger
       const index = indexFromElement(node)
       const item = measurementsCache[index]
       if (!item) {
@@ -218,6 +251,118 @@ export const TableVirtual: TableFeature = {
     }
 
     const observer = createResizeObserver(_measureElement)
+
+    const _scrollToOffset = (scrollElement: Element, offset: number) => {
+      scrollElement?.scrollTo({
+        top: offset,
+      })
+    }
+
+    const oldDestroy = table.destroy
+    const cleanup = () => {
+      unsubs.filter(Boolean).forEach((d) => d!())
+      unsubs = []
+      observer.disconnect()
+      measurementsCache = []
+      itemSizeCache.clear()
+    }
+
+    const resizeItem = (index: number, size: number) => {
+      debugger
+      const item = measurementsCache[index]
+      if (!item) {
+        return
+      }
+      const itemSize = itemSizeCache.get(item.key) ?? item.size
+      const delta = size - itemSize
+
+      if (delta !== 0) {
+        // if (
+        //   shouldAdjustScrollPositionOnItemSizeChange !== undefined
+        //     ? shouldAdjustScrollPositionOnItemSizeChange(item, delta, this)
+        //     : item.start < getScrollOffset() + scrollAdjustments
+        // ) {
+        //   if (process.env.NODE_ENV !== 'production' && options.debug) {
+        //     console.info('correction', delta)
+        //   }
+
+        //   _scrollToOffset(getScrollOffset(), {
+        //     adjustments: (scrollAdjustments += delta),
+        //     behavior: undefined,
+        //   })
+        // }
+        pendingMeasuredCacheIndexes.push(item.index)
+        itemSizeCache = new Map(itemSizeCache.set(item.key, size))
+
+        table.calculateRange()
+
+        const row = table.getRowModel().rows[item.index]
+        if (!row) return
+        row?.setRowHeight(size, false)
+        row.setRowTop(item.start)
+        row?.render()
+      }
+    }
+
+    function _calculateRange({
+      measurements,
+      outerSize,
+      scrollOffset,
+    }: {
+      measurements: Array<IVirtualItem>
+      outerSize: number
+      scrollOffset: number
+    }) {
+      const lastIndex = measurements.length - 1
+      const getOffset = (index: number) => measurements[index]!.start
+
+      let startIndex = findNearestBinarySearch(0, lastIndex, getOffset, scrollOffset)
+      let endIndex = startIndex
+
+      while (endIndex < lastIndex && measurements[endIndex]!.end < scrollOffset + outerSize) {
+        endIndex++
+      }
+
+      return { startIndex, endIndex }
+    }
+
+    const findNearestBinarySearch = (
+      low: number,
+      high: number,
+      getCurrentValue: (i: number) => number,
+      value: number,
+    ) => {
+      while (low <= high) {
+        const middle = ((low + high) / 2) | 0
+        const currentValue = getCurrentValue(middle)
+
+        if (currentValue < value) {
+          low = middle + 1
+        } else if (currentValue > value) {
+          high = middle - 1
+        } else {
+          return middle
+        }
+      }
+
+      if (low > 0) {
+        return low - 1
+      } else {
+        return 0
+      }
+    }
+
+    const indexFromElement = (node: Element) => {
+      const attributeName = table.options.virtualIndexAttribute!
+      const indexStr = node.getAttribute(attributeName)
+
+      if (!indexStr) {
+        console.warn(`Missing attribute name '${attributeName}={index}' on measured element.`)
+        return -1
+      }
+
+      return parseInt(indexStr, 10)
+    }
 
     table.setVirtual = (updater: Updater<IVirtualState>) =>
       table.options.onVirtualStateChange?.(updater)
@@ -265,6 +410,8 @@ export const TableVirtual: TableFeature = {
             key,
           }
         }
+
+        measurementsCache = measurements
 
         return measurements
       },
@@ -332,6 +479,20 @@ export const TableVirtual: TableFeature = {
       return table.getState().virtual.isScrolling
     }
 
+    table.measureElement = (node: Element | null | undefined) => {
+      if (!node) {
+        elementsCache.forEach((cached, key) => {
+          if (!cached.isConnected) {
+            observer.unobserve(cached)
+            elementsCache.delete(key)
+          }
+        })
+        return
+      }
+
+      _measureElement(node, undefined)
+    }
+
     // 虚拟滚动初始化创建入口
     table.willUpdateVirtual = () => {
       const scrollElement = table.elRefs.tableBody
@@ -354,144 +515,25 @@ export const TableVirtual: TableFeature = {
       unsubs.push(
         createViewportResizeObserver(() => {
           table.calculateRange()
-        })
+        }),
       )
-      
+
       // 监听容器滚动
       unsubs.push(
         observeElementScroll((offset: any, isScrolling: boolean) => {
-          table.setRenderGrid(old => ({
+          table.setRenderGrid((old) => ({
             ...old,
             scrollTop: offset.scrollTop || 0,
             scrollLeft: offset.scrollLeft || 0,
           }))
           table.calculateRange()
-        })
+        }),
       )
-    }
-
-    const _scrollToOffset = (scrollElement: Element, offset: number) => {
-      scrollElement?.scrollTo({
-        top: offset,
-      })
-    }
-
-    const oldDestroy = table.destroy
-    const cleanup = () => {
-      unsubs.filter(Boolean).forEach((d) => d!())
-      unsubs = []
-      observer.disconnect()
-      measurementsCache = []
-      itemSizeCache.clear()
     }
 
     table.destroy = () => {
       cleanup()
       oldDestroy()
-    }
-
-    const resizeItem = (index: number, size: number) => {
-      const item = measurementsCache[index]
-      if (!item) {
-        return
-      }
-      const itemSize = itemSizeCache.get(item.key) ?? item.size
-      const delta = size - itemSize
-
-      if (delta !== 0) {
-        // if (
-        //   shouldAdjustScrollPositionOnItemSizeChange !== undefined
-        //     ? shouldAdjustScrollPositionOnItemSizeChange(item, delta, this)
-        //     : item.start < getScrollOffset() + scrollAdjustments
-        // ) {
-        //   if (process.env.NODE_ENV !== 'production' && options.debug) {
-        //     console.info('correction', delta)
-        //   }
-
-        //   _scrollToOffset(getScrollOffset(), {
-        //     adjustments: (scrollAdjustments += delta),
-        //     behavior: undefined,
-        //   })
-        // }
-
-        pendingMeasuredCacheIndexes.push(item.index)
-        itemSizeCache = new Map(itemSizeCache.set(item.key, size))
-
-        // notify(false)
-      }
-    }
-    const measureElement = (node: Element | null | undefined) => {
-      if (!node) {
-        elementsCache.forEach((cached, key) => {
-          if (!cached.isConnected) {
-            observer.unobserve(cached)
-            elementsCache.delete(key)
-          }
-        })
-        return
-      }
-
-      _measureElement(node, undefined)
-    }
-
-    function _calculateRange({
-      measurements,
-      outerSize,
-      scrollOffset,
-    }: {
-      measurements: Array<IVirtualItem>
-      outerSize: number
-      scrollOffset: number
-    }) {
-      const lastIndex = measurements.length - 1
-      const getOffset = (index: number) => measurements[index]!.start
-
-      let startIndex = findNearestBinarySearch(0, lastIndex, getOffset, scrollOffset)
-      let endIndex = startIndex
-
-      while (endIndex < lastIndex && measurements[endIndex]!.end < scrollOffset + outerSize) {
-        endIndex++
-      }
-
-      return { startIndex, endIndex }
-    }
-
-    const findNearestBinarySearch = (
-      low: number,
-      high: number,
-      getCurrentValue: (i: number) => number,
-      value: number,
-    ) => {
-      while (low <= high) {
-        const middle = ((low + high) / 2) | 0
-        const currentValue = getCurrentValue(middle)
-
-        if (currentValue < value) {
-          low = middle + 1
-        } else if (currentValue > value) {
-          high = middle - 1
-        } else {
-          return middle
-        }
-      }
-
-      if (low > 0) {
-        return low - 1
-      } else {
-        return 0
-      }
-    }
-
-    const indexFromElement = (node: Element) => {
-      const attributeName = table.options.virtualIndexAttribute!
-      const indexStr = node.getAttribute(attributeName)
-
-      if (!indexStr) {
-        console.warn(`Missing attribute name '${attributeName}={index}' on measured element.`)
-        return -1
-      }
-
-      return parseInt(indexStr, 10)
     }
   },
 }
