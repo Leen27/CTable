@@ -100,6 +100,9 @@ import {
   VirtualInitialTableState,
   VirtualTableState,
 } from './features/TableVirtual'
+import {
+ColumnRenderInstance
+} from './features/ColumnRender'
 
 import { CoreRow } from './core/row'
 import { PartialKeys, UnionToIntersection } from './utils'
@@ -166,7 +169,8 @@ export interface Table<TData extends RowData>
     RowSelectionInstance<TData>,
     RenderGridInstance<TData>,
     ITableVirtualInstance<TData>,
-    TableEventInstance<TData> {}
+    TableEventInstance<TData>,
+    ColumnRenderInstance<TData> {}
 
 interface FeatureOptions<TData extends RowData>
   extends VisibilityOptions,
