@@ -7,6 +7,7 @@ import {
   TableOptionsResolved,
   createTable,
   TableState,
+  ColumnDef,
 } from '../src'
 import { EventTypesEnum } from '../src/core/events'
 import MockData from './mock-data'
@@ -50,17 +51,22 @@ const data: Person[] = [
 
 const columnHelper = createColumnHelper<Person>()
 
-const columns = [
-  columnHelper.accessor('firstName', {
-    cell: (info) => info.getValue(),
-    footer: (info) => info.column.id,
-  }),
-  columnHelper.accessor((row) => row.lastName, {
-    id: 'lastName',
-    cell: (info) => `<i>${info.getValue()}</i>`,
-    header: () => '<span>Last Name</span>',
-    footer: (info) => info.column.id,
-  }),
+const columns: ColumnDef<Person, any>[] = [
+  {
+    header: 'Name',
+    columns: [
+      columnHelper.accessor('firstName', {
+        cell: (info) => info.getValue(),
+        footer: (info) => info.column.id,
+      }),
+      columnHelper.accessor((row) => row.lastName, {
+        id: 'lastName',
+        cell: (info) => `<i>${info.getValue()}</i>`,
+        header: () => '<span>Last Name</span>',
+        footer: (info) => info.column.id,
+      }),
+    ]
+  },
   columnHelper.accessor('age', {
     header: () => 'Age',
     cell: (info) => info.renderValue(),

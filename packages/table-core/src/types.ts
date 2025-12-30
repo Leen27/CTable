@@ -101,7 +101,8 @@ import {
   VirtualTableState,
 } from './features/TableVirtual'
 import {
-ColumnRenderInstance
+ColumnRenderInstance,
+ColumnRenderOptions
 } from './features/ColumnRender'
 
 import { CoreRow } from './core/row'
@@ -191,7 +192,8 @@ interface FeatureOptions<TData extends RowData>
     RenderGridStateOptions<TData>,
     RowRenderStateOptions<TData>,
     ITableVirtualOptions<TData>,
-    TableEventOptions<TData> {}
+    TableEventOptions<TData>,
+    ColumnRenderOptions<TData> {}
 
 export interface TableOptionsResolved<TData extends RowData>
   extends CoreOptions<TData>,

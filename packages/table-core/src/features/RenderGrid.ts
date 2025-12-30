@@ -169,7 +169,9 @@ export const RenderGrid: TableFeature = {
           innerHTML: 'header',
         })
 
-        table.elRefs.tableHeader.addEventListener('click', () => console.log(table))
+        const columnEl = table.createColumnsElement()
+
+        table.elRefs.tableHeader.appendChild(columnEl)
       }
 
       const initBody = () => {

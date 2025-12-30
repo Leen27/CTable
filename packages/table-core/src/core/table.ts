@@ -41,6 +41,7 @@ import { RenderGrid } from '../features/RenderGrid'
 import { TableEvent } from '../features/TableEvent'
 import { RowRender } from '../features/RowRender'
 import { TableVirtual } from '../features/TableVirtual'
+import { ColumnRender } from '../features/ColumnRender'
 
 const builtInFeatures = [
   Headers,
@@ -62,6 +63,7 @@ const builtInFeatures = [
   RowRender,
   TableEvent,
   TableVirtual,
+  ColumnRender
 ] as const
 
 //
