@@ -461,6 +461,12 @@ export function createElement<T extends HTMLElement = HTMLElement>(
     tag?: string
     cls?: string
     attrs?: { [key: string]: string }
+    styles?:
+    | {
+        [cssProperty: string]: string | number
+      }
+    | null
+    | undefined,
   },
 ): T {
   const element = document.createElement(tag as keyof HTMLElementTagNameMap)
@@ -485,6 +491,12 @@ export function createElement<T extends HTMLElement = HTMLElement>(
     if (attributes) {
       Object.entries(attributes).forEach(([key, value]) => {
         element.setAttribute(key, value)
+      })
+    }
+
+    if (options.styles) {
+      addStylesToElement(element, {
+        ...options.styles
       })
     }
 

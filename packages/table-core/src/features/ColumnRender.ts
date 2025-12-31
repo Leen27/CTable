@@ -36,12 +36,12 @@ const defaultRenderColumn = <TData extends RowData>(
       'data-column-id': header.column.id,
       'data-column-index': header.index.toString(),
       'data-header-depth': header.depth.toString(),
+    },
+    styles: {
+      width: header.getSize() + 'px',
+      flexBasis: header.getSize() + 'px',
     }
   });
-
-  addStylesToElement(columnElement, {
-    width: header.getSize() + 'px'
-  })
 
   // 渲染列头内容
   const headerContent = flexRender(header.column.columnDef.header, header.getContext());
@@ -66,13 +66,18 @@ const defaultRenderColumnsContainer = <TData extends RowData>(
   table: Table<TData>
 ): HTMLElement => {
   const container = createElement('div', {
-    className: 'c-table-columns-container w-full h-full',
+    className: 'c-table-columns-container overflow-scroll w-full h-full',
   });
+
+  const totalSize = table.getTotalSize()
 
   // 渲染每个列
   headerGroups.forEach(hg => {
     const colRow = createElement('div', {
       className: 'c-table-columns-row-container w-full h-full flex',
+      styles: {
+        width: totalSize + 'px'
+      }
     });
 
     hg.headers.forEach(header => {

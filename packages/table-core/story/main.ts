@@ -58,12 +58,14 @@ const columns: ColumnDef<Person, any>[] = [
       columnHelper.accessor('firstName', {
         cell: (info) => info.getValue(),
         footer: (info) => info.column.id,
+        size: 500
       }),
       columnHelper.accessor((row) => row.lastName, {
         id: 'lastName',
         cell: (info) => `<i>${info.getValue()}</i>`,
         header: () => '<span>Last Name</span>',
         footer: (info) => info.column.id,
+        size: 500
       }),
     ]
   },
@@ -71,18 +73,22 @@ const columns: ColumnDef<Person, any>[] = [
     header: () => 'Age',
     cell: (info) => info.renderValue(),
     footer: (info) => info.column.id,
+    size: 500
   }),
   columnHelper.accessor('visits', {
     header: () => '<span>Visits</span>',
     footer: (info) => info.column.id,
+    size: 500
   }),
   columnHelper.accessor('status', {
     header: 'Status',
     footer: (info) => info.column.id,
+    size: 500
   }),
   columnHelper.accessor('progress', {
     header: 'Profile Progress',
     footer: (info) => info.column.id,
+    size: 500
   }),
 ]
 
