@@ -88,11 +88,11 @@ import {
   RowSelectionTableState,
 } from './features/RowSelection'
 import {
-  RenderGridInitialTableState,
-  RenderGridInstance,
-  RenderGridStateOptions,
-  RenderGridTableState,
-} from './features/RenderGrid'
+  TableRenderInitialTableState,
+  TableRenderInstance,
+  TableRenderStateOptions,
+  TableRenderTableState,
+} from './features/TableRender'
 import { TableEventOptions, TableEventInstance } from './features/TableEvent'
 import {
   ITableVirtualInstance,
@@ -168,7 +168,7 @@ export interface Table<TData extends RowData>
     ExpandedInstance<TData>,
     PaginationInstance<TData>,
     RowSelectionInstance<TData>,
-    RenderGridInstance<TData>,
+    TableRenderInstance<TData>,
     ITableVirtualInstance<TData>,
     TableEventInstance<TData>,
     ColumnRenderInstance<TData> {}
@@ -189,7 +189,7 @@ interface FeatureOptions<TData extends RowData>
     RowSelectionOptions<TData>,
     // VirtualOptions<TData>,
     // DomRenderingOptions<TData>
-    RenderGridStateOptions<TData>,
+    TableRenderStateOptions<TData>,
     RowRenderStateOptions<TData>,
     ITableVirtualOptions<TData>,
     TableEventOptions<TData>,
@@ -220,7 +220,7 @@ export interface TableState
     PaginationTableState,
     RowSelectionTableState,
     VirtualTableState,
-    RenderGridTableState {}
+    TableRenderTableState {}
 
 interface CompleteInitialTableState
   extends CoreTableState,
@@ -235,7 +235,7 @@ interface CompleteInitialTableState
     GroupingTableState,
     ColumnSizingTableState,
     PaginationInitialTableState,
-    RenderGridInitialTableState,
+    TableRenderInitialTableState,
     VirtualInitialTableState {}
 
 export interface InitialTableState extends Partial<CompleteInitialTableState> {}

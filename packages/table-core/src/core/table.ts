@@ -37,7 +37,7 @@ import { RowPagination } from '../features/RowPagination'
 import { RowPinning } from '../features/RowPinning'
 import { RowSelection } from '../features/RowSelection'
 import { RowSorting } from '../features/RowSorting'
-import { RenderGrid } from '../features/RenderGrid'
+import { TableRender } from '../features/TableRender'
 import { TableEvent } from '../features/TableEvent'
 import { RowRender } from '../features/RowRender'
 import { TableVirtual } from '../features/TableVirtual'
@@ -59,7 +59,7 @@ const builtInFeatures = [
   RowPinning,
   RowSelection,
   ColumnSizing,
-  RenderGrid,
+  TableRender,
   RowRender,
   TableEvent,
   TableVirtual,

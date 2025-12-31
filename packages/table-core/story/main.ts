@@ -102,11 +102,11 @@ const resolvedOptions: TableOptionsResolved<Person> = {
       table.options.state = updater
     }
   },
-  onRenderGridChange: (updater) => {
+  onTableRenderChange: (updater) => {
     if (updater instanceof Function) {
-      table.options.state.renderGrid = updater(table.options.state.renderGrid!)
+      table.options.state.tableRender = updater(table.options.state.tableRender!)
     } else {
-      table.options.state.renderGrid = updater
+      table.options.state.tableRender = updater
     }
   },
   onVirtualStateChange(updater) {

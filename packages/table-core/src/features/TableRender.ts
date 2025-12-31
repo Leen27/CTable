@@ -15,7 +15,7 @@ import {
   getElementSize,
 } from '../utils/dom'
 
-export interface RenderGridState {
+export interface TableRenderState {
   /** 可见行范围 */
   visibleRange: { startIndex: number; endIndex: number }
   /** 滚动位置 */
@@ -50,28 +50,28 @@ export interface RenderGridState {
   /**viewTop */
 }
 
-export interface RenderGridTableState {
-  renderGrid: RenderGridState
+export interface TableRenderTableState {
+  tableRender: TableRenderState
 }
 
-export interface RenderGridInitialTableState {
-  renderGrid?: Partial<RenderGridState>
+export interface TableRenderInitialTableState {
+  tableRender?: Partial<TableRenderState>
 }
 
-export interface RenderGridStateOptions<TData extends RowData> {
+export interface TableRenderStateOptions<TData extends RowData> {
   /** 容器引用 */
   containerRef?: HTMLElement | null
   /** 默认行高（像素）会用于预估计算 */
   rowHeight?: number
   /** 表格最大高度 */
   maxHeight?: number
-  /**renderGrid 状态变化回调 */
-  onRenderGridChange?: OnChangeFn<RenderGridState>
+  /**tableRender 状态变化回调 */
+  onTableRenderChange?: OnChangeFn<TableRenderState>
   /** 初始化滚动距离 */
   initialOffset?: number
 }
 
-export interface RenderGridInstance<TData extends RowData> {
+export interface TableRenderInstance<TData extends RowData> {
   elRefs: {
     containerRef: HTMLElement | null
     tableContainer: HTMLElement | null
@@ -81,7 +81,7 @@ export interface RenderGridInstance<TData extends RowData> {
     tableFooter: HTMLElement | null
     elementCreated: boolean
   }
-  setRenderGrid: (updater: Updater<RenderGridState>) => void
+  setTableRender: (updater: Updater<TableRenderState>) => void
   /** 创建表格 DOM 元素 */
   createElement: () => void
   /** 渲染表格入口 */
@@ -98,7 +98,7 @@ export interface RenderGridInstance<TData extends RowData> {
   getViewportHeight: () => number
 }
 
-const defaultRenderGridState: RenderGridState = {
+const defaultTableRenderState: TableRenderState = {
   visibleRange: { startIndex: 0, endIndex: 0 },
   scrollTop: 0,
   scrollLeft: 0,
@@ -128,24 +128,24 @@ export const flexRender = <TProps extends object>(comp: any, props: TProps) => {
  * 表格容器渲染相关
  * 包括表格容器的Dom创建, 更新大小, 监听大小变化等
  */
-export const RenderGrid: TableFeature = {
-  getInitialState: (state): RenderGridTableState => {
+export const TableRender: TableFeature = {
+  getInitialState: (state): TableRenderTableState => {
     return {
       ...state,
-      renderGrid: {
-        ...defaultRenderGridState,
-        ...(state?.renderGrid || {}),
+      tableRender: {
+        ...defaultTableRenderState,
+        ...(state?.tableRender || {}),
       },
     }
   },
 
   getDefaultOptions: <TData extends RowData>(
     table: Table<TData>,
-  ): Partial<RenderGridStateOptions<TData>> => {
+  ): Partial<TableRenderStateOptions<TData>> => {
     return {
       rowHeight: 20,
       initialOffset: 0,
-      onRenderGridChange: makeStateUpdater('renderGrid', table),
+      onTableRenderChange: makeStateUpdater('tableRender', table),
     }
   },
 
@@ -160,7 +160,7 @@ export const RenderGrid: TableFeature = {
       elementCreated: false,
     }
 
-    table.setRenderGrid = (updater) => table.options.onRenderGridChange?.(updater)
+    table.setTableRender = (updater) => table.options.onTableRenderChange?.(updater)
 
     table.createElement = () => {
       const initHeader = () => {
@@ -231,51 +231,51 @@ export const RenderGrid: TableFeature = {
     }
 
     table.updateTableContainerSizeState = () => {
-      table.setRenderGrid((old) => {
+      table.setTableRender((old) => {
         if (!table.elRefs.containerRef) return old
 
-        const renderGrid = { ...old }
+        const tableRender = { ...old }
 
         const { width, height } = getElementSize(table.elRefs.containerRef)
-        renderGrid.parentContainerWidth = width
-        renderGrid.parentContainerHeight = height
+        tableRender.parentContainerWidth = width
+        tableRender.parentContainerHeight = height
 
         if (table.elRefs.tableHeader) {
           const { width, height } = getElementSize(table.elRefs.tableHeader)
-          renderGrid.headerWidth = width
-          renderGrid.headerHeight = height
+          tableRender.headerWidth = width
+          tableRender.headerHeight = height
         }
 
         if (table.elRefs.tableFooter) {
           const { width, height } = getElementSize(table.elRefs.tableFooter)
-          renderGrid.footerWidth = width
-          renderGrid.footerHeight = height
+          tableRender.footerWidth = width
+          tableRender.footerHeight = height
         }
 
         if (table.elRefs.tableBody) {
           const { width, height } = getElementSize(table.elRefs.tableBody)
-          renderGrid.bodyWidth = width
-          renderGrid.bodyHeight = height
+          tableRender.bodyWidth = width
+          tableRender.bodyHeight = height
         }
 
         if (table.elRefs.tableContainer) {
           const { width, height } = getElementSize(table.elRefs.tableContainer)
-          renderGrid.containerWidth = width
-          renderGrid.containerHeight = height
+          tableRender.containerWidth = width
+          tableRender.containerHeight = height
         }
 
-        return renderGrid
+        return tableRender
       })
     }
 
     table.updateTableContainerScrollState = () => {
-      table.setRenderGrid((old) => {
-        const renderGridState = { ...old }
+      table.setTableRender((old) => {
+        const tableRenderState = { ...old }
 
-        renderGridState.scrollTop = table.elRefs.tableBody!['scrollTop']
-        renderGridState.scrollLeft = table.elRefs.tableBody!['scrollLeft']
+        tableRenderState.scrollTop = table.elRefs.tableBody!['scrollTop']
+        tableRenderState.scrollLeft = table.elRefs.tableBody!['scrollLeft']
 
-        return renderGridState
+        return tableRenderState
       })
     }
 

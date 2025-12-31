@@ -87,7 +87,7 @@ describe('Row Rendering', () => {
       onStateChange: () => {},
       renderFallbackValue: null,
       state: {
-        renderGrid: {
+        tableRender: {
           visibleRange: { startIndex: 0, endIndex: 2 },
           scrollTop: 0,
           scrollLeft: 0,
@@ -114,11 +114,11 @@ describe('Row Rendering', () => {
           offsetCache: [],
         },
       },
-      onRenderGridChange: (updater: any) => {
+      onTableRenderChange: (updater: any) => {
         if (updater instanceof Function) {
-          table.options.state.renderGrid = updater(table.options.state.renderGrid)
+          table.options.state.tableRender = updater(table.options.state.tableRender)
         } else {
-          table.options.state.renderGrid = updater
+          table.options.state.tableRender = updater
         }
       },
       onVirtualStateChange: (updater: any) => {

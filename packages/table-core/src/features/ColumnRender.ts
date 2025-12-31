@@ -1,6 +1,6 @@
 import { RowData, Table, TableFeature, Header, HeaderGroup } from "../types";
 import { createElement, addStylesToElement } from "../utils/dom";
-import { flexRender } from "./RenderGrid";
+import { flexRender } from "./TableRender";
 
 export interface ColumnRenderInstance<TData extends RowData> {
   createColumnsElement(): HTMLElement

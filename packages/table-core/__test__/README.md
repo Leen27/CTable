@@ -49,7 +49,7 @@ type Person = {
 
 ### createTestTable()
 这个辅助函数封装了创建测试表格的复杂配置，包括：
-- 必要的状态配置（renderGrid和virtual状态）
+- 必要的状态配置（tableRender和virtual状态）
 - 事件处理函数
 - 行高设置
 

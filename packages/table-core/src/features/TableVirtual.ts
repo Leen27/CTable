@@ -17,7 +17,7 @@ import {
   memo,
   throttle,
 } from '../utils'
-import { RenderGridState, RenderGridTableState } from './RenderGrid'
+import { TableRenderState, TableRenderTableState } from './TableRender'
 
 export interface Rect {
   width: number
@@ -415,7 +415,7 @@ export const TableVirtual: TableFeature = {
       () => [
         table.getMeasurements(),
         table.getViewportHeight(),
-        table.getState().renderGrid.scrollTop,
+        table.getState().tableRender.scrollTop,
       ],
       (measurements, outerSize, scrollOffset) => {
         table.setVirtual((old) => ({
@@ -433,9 +433,9 @@ export const TableVirtual: TableFeature = {
     )
 
     table.getVirtualRowModel = memo(
-      () => [table.getState().renderGrid, table.getState().virtual, table.getRowModel()],
-      (renderGrid: RenderGridState, virtual: IVirtualState, rowModel: RowModel<TData>) => {
-        if (renderGrid.bodyHeight === 0) {
+      () => [table.getState().tableRender, table.getState().virtual, table.getRowModel()],
+      (tableRender: TableRenderState, virtual: IVirtualState, rowModel: RowModel<TData>) => {
+        if (tableRender.bodyHeight === 0) {
           return {
             rows: [],
             flatRows: [],
@@ -514,7 +514,7 @@ export const TableVirtual: TableFeature = {
       // 监听容器滚动
       unsubs.push(
         observeElementScroll((offset: any, isScrolling: boolean) => {
-          table.setRenderGrid((old) => ({
+          table.setTableRender((old) => ({
             ...old,
             scrollTop: offset.scrollTop || 0,
             scrollLeft: offset.scrollLeft || 0,
