@@ -1,3 +1,4 @@
+import { Component } from 'vue'
 import { CoreOptions, CoreTableState, CoreInstance } from './core/table'
 import {
   VisibilityInstance,
@@ -263,7 +264,7 @@ export type AccessorFn<TData extends RowData, TValue = unknown> = (
   index: number,
 ) => TValue
 
-export type ColumnDefTemplate<TProps extends object> = string | ((props: TProps) => any)
+export type ColumnDefTemplate<TProps extends object> = string | ((props: TProps) => any) | Component
 
 export type StringOrTemplateHeader<TData, TValue> =
   | string

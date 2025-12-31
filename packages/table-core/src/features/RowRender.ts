@@ -3,6 +3,7 @@ import { Row, RowData, Table, TableFeature } from '../types'
 import { isFunction } from '../utils'
 import { addStylesToElement, createElement } from '../utils/dom'
 import { isNumber } from '../utils/is'
+import { createCellRenderer, cleanupCellRenderer } from '../utils/vue-renderer'
 
 export interface RowRenderStateOptions<TData extends RowData> {
   /** 计算行高回调 */
@@ -32,6 +33,9 @@ export interface IRowRenderRow {
   render: () => void
 
   getGui: () => HTMLElement | null
+
+  /** 销毁 row */
+  destroy: () => void
 }
 
 export const RowRender: TableFeature = {
@@ -50,10 +54,40 @@ export const RowRender: TableFeature = {
             id: row.id,
             index: row.index + '',
             [table.options.virtualIndexAttribute!]: row.index + ''
-          },
-          innerHTML: `<div style="height: ${Math.random() * 100 + 26}px;">index: ${row.index}</div>`,
+          }
         })
 
+        // 创建行容器，用于显示单元格
+        const rowContainer = createElement('div', {
+          className: 'flex w-full h-full'
+        })
+
+        // 渲染每个可见的单元格
+        row.getVisibleCells().forEach(cell => {
+          const cellElement = createElement('div', {
+            className: 'c-table-cell border-r border-b flex items-center justify-center',
+            styles: {
+              width: cell.column.getSize() + 'px',
+              minWidth: cell.column.getSize() + 'px',
+              maxWidth: cell.column.getSize() + 'px'
+            }
+          })
+
+          // 获取单元格内容定义
+          const cellContent = cell.column.columnDef.cell
+          
+          if (cellContent) {
+            // 使用 Vue 渲染器渲染单元格内容
+            createCellRenderer(cellContent, cell.getContext(), cellElement)
+          } else {
+            // 默认渲染单元格值
+            cellElement.textContent = cell.renderValue()?.toString() ?? ''
+          }
+
+          rowContainer.appendChild(cellElement)
+        })
+
+        row.eGui.appendChild(rowContainer)
         table.elRefs.tableContent?.appendChild(row.eGui)
 
         // 监听resize 并更新row 高度
@@ -70,5 +104,19 @@ export const RowRender: TableFeature = {
     }
 
     row.getGui = () => row.eGui
+
+    row.destroy = () => {
+      if (row.eGui) {
+        // 清理所有单元格中的 Vue 实例
+        const cellElements = row.eGui.querySelectorAll('.c-table-cell')
+        cellElements.forEach(cellElement => {
+          cleanupCellRenderer(cellElement as HTMLElement)
+        })
+        
+        // 移除 DOM 元素
+        row.eGui.remove()
+        row.eGui = null
+      }
+    }
   },
 }

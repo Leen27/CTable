@@ -12,6 +12,7 @@ import {
 import { EventTypesEnum } from '../src/core/events'
 import MockData from './mock-data'
 import { createElement } from '../src/utils/dom'
+import { ProgressBar, StatusTag, Avatar, NumberBadge } from './vue-components'
 
 type Person = {
   firstName: string
@@ -56,39 +57,42 @@ const columns: ColumnDef<Person, any>[] = [
     header: 'Name',
     columns: [
       columnHelper.accessor('firstName', {
-        cell: (info) => info.getValue(),
-        footer: (info) => info.column.id,
-        size: 500
+        cell: (info: any) => Avatar,
+        footer: (info: any) => info.column.id,
+        size: 200
       }),
       columnHelper.accessor((row) => row.lastName, {
         id: 'lastName',
-        cell: (info) => `<i>${info.getValue()}</i>`,
+        cell: (info: any) => `<i>${info.getValue()}</i>`,
         header: () => '<span>Last Name</span>',
-        footer: (info) => info.column.id,
-        size: 500
+        footer: (info: any) => info.column.id,
+        size: 150
       }),
     ]
   },
   columnHelper.accessor('age', {
     header: () => 'Age',
-    cell: (info) => info.renderValue(),
-    footer: (info) => info.column.id,
-    size: 500
+    cell: (info: any) => info.renderValue(),
+    footer: (info: any) => info.column.id,
+    size: 80
   }),
   columnHelper.accessor('visits', {
-    header: () => '<span>Visits</span>',
-    footer: (info) => info.column.id,
-    size: 500
+    header: () => 'Visits',
+    cell: (info: any) => NumberBadge,
+    footer: (info: any) => info.column.id,
+    size: 100
   }),
   columnHelper.accessor('status', {
     header: 'Status',
-    footer: (info) => info.column.id,
-    size: 500
+    cell: (info: any) => StatusTag,
+    footer: (info: any) => info.column.id,
+    size: 150
   }),
   columnHelper.accessor('progress', {
     header: 'Profile Progress',
-    footer: (info) => info.column.id,
-    size: 500
+    cell: (info: any) => ProgressBar,
+    footer: (info: any) => info.column.id,
+    size: 200
   }),
 ]
 
@@ -97,7 +101,7 @@ const resolvedOptions: TableOptionsResolved<Person> = {
   data: MockData,
   columns,
   getCoreRowModel: getCoreRowModel(),
-  dynamic: false,
+  dynamic: true,
   state: {
     columnVisibility: {},
   }, // Dummy state

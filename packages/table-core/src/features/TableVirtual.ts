@@ -453,6 +453,16 @@ export const TableVirtual: TableFeature = {
           rowsById[row.id] = row
         })
 
+        // !TODO
+        // 清理不再可见的行
+        const currentVisibleIds = new Set(visibleRows.map(r => r.id))
+        rowModel.rows.forEach(row => {
+          if (!currentVisibleIds.has(row.id) && row.getGui()) {
+            // 行不再可见，销毁它
+            row.destroy?.()
+          }
+        })
+
         return {
           rows: visibleRows,
           flatRows,

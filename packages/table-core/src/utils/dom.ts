@@ -345,7 +345,7 @@ export function addStylesToElement(
     | null
     | undefined,
 ) {
-  if (!styles) {
+  if (!styles || !eElement) {
     return
   }
 
