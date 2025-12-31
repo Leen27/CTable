@@ -105,6 +105,7 @@ export const RowRender: TableFeature = {
 
     row.getGui = () => row.eGui
 
+    const oldRowDestroy = row.destroy
     row.destroy = () => {
       if (row.eGui) {
         // 清理所有单元格中的 Vue 实例
@@ -117,6 +118,8 @@ export const RowRender: TableFeature = {
         row.eGui.remove()
         row.eGui = null
       }
+
+      oldRowDestroy()
     }
   },
 }
