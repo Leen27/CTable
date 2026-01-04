@@ -305,11 +305,6 @@ export const TableRender: TableFeature = {
         table.elRefs.tableBody!.style.maxHeight = table.options.maxHeight + 'px'
       }
 
-      table.getViewportRows().forEach((row) => {
-        row.render()
-        table.elRefs.tableContent!.appendChild(row.getGui()!)
-      })
-
       table.elRefs.tableContent!.style.height =
         table.getRowModel().rows.length * table.options.rowHeight! + 'px'
 

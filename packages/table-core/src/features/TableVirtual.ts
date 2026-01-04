@@ -62,6 +62,7 @@ export interface ITableVirtualOptions<TData extends RowData> {
   initialMeasurementsCache?: Array<IVirtualItem>
   virtualIndexAttribute?: string
   dynamic?: boolean
+  rangeExtractor?: (range: Range) => Array<number>
   measureElement?: (
     node: Element,
     entry: ResizeObserverEntry | undefined,
@@ -75,7 +76,10 @@ export interface ITableVirtualInstance<TData extends RowData> {
   getStartIndex(): number
   getEndIndex(): number
   setVirtual(updater: Updater<IVirtualState>): void
+  getPreVirtualRowModel(): RowModel<TData>
   getVirtualRowModel(): RowModel<TData>
+  getVirtualIndexes(): Array<number>
+  getVirtualItems(): Array<IVirtualItem>
   getMeasurementOptions(): {
     count: number
     paddingStart: number
@@ -87,6 +91,26 @@ export interface ITableVirtualInstance<TData extends RowData> {
   getMeasurements(): Array<IVirtualItem>
   getVirtualViewportScrolling(): boolean
   measureElement(node: Element | null | undefined): void
+}
+
+export interface Range {
+  startIndex: number
+  endIndex: number
+  overscan: number
+  count: number
+}
+
+export const defaultRangeExtractor = (range: Range) => {
+  const start = Math.max(range.startIndex - range.overscan, 0)
+  const end = Math.min(range.endIndex + range.overscan, range.count - 1)
+
+  const arr = []
+
+  for (let i = start; i <= end; i++) {
+    arr.push(i)
+  }
+
+  return arr
 }
 
 export const TableVirtual: TableFeature = {
@@ -110,6 +134,7 @@ export const TableVirtual: TableFeature = {
       onVirtualStateChange: makeStateUpdater('virtual', table),
       initialMeasurementsCache: [],
       virtualIndexAttribute: 'data-index',
+      rangeExtractor: defaultRangeExtractor,
       measureElement: (
         element,
         entry,
@@ -376,10 +401,9 @@ export const TableVirtual: TableFeature = {
 
         const measurements = measurementsCache.slice(0, min)
 
-        const count = table.getRowModel().rows.length
-
+        const count = table.getPreVirtualRowModel().rows.length
         for (let i = min; i < count; i++) {
-          const row = table.getRowModel().rows[i]
+          const row = table.getPreVirtualRowModel().rows[i]
           const key = row?.id
 
           if (!key) continue
@@ -432,30 +456,70 @@ export const TableVirtual: TableFeature = {
       getMemoOptions(table.options, 'debugRows', 'calculateRange'),
     )
 
-    table.getVirtualRowModel = memo(
-      () => [table.getState().tableRender, table.getState().virtual, table.getRowModel()],
-      (tableRender: TableRenderState, virtual: IVirtualState, rowModel: RowModel<TData>) => {
-        if (tableRender.bodyHeight === 0) {
-          return {
-            rows: [],
-            flatRows: [],
-            rowsById: {},
-          }
+    table.getVirtualIndexes = memo(
+      () => {
+        table.calculateRange()
+        const { startIndex, endIndex } = table.getState().virtual
+        return [
+          table.options.rangeExtractor,
+          table.options.overscan!,
+          table.getPreVirtualRowModel().rows.length,
+          startIndex,
+          endIndex,
+        ]
+      },
+      (rangeExtractor, overscan, count, startIndex, endIndex) => {
+        return startIndex === null || endIndex === null
+          ? []
+          : rangeExtractor!({
+              startIndex,
+              endIndex,
+              overscan,
+              count,
+            })
+      },
+      getMemoOptions(table.options, 'debugTable', 'getVirtualIndexes'),
+    )
+
+    table.getVirtualItems = memo(
+      () => [table.getVirtualIndexes(), table.getMeasurements()],
+      (indexes, measurements) => {
+        const virtualItems: Array<IVirtualItem> = []
+
+        for (let k = 0, len = indexes.length; k < len; k++) {
+          const i = indexes[k]!
+          const measurement = measurements[i]!
+
+          virtualItems.push(measurement)
         }
 
-        const { startIndex, endIndex } = virtual
-        const visibleRows = rowModel.rows.slice(startIndex, endIndex + 1)
-        const flatRows = rowModel.flatRows.slice(startIndex, endIndex + 1)
+        return virtualItems
+      },
+      getMemoOptions(table.options, 'debugTable', 'getVirtualItems'),
+    )
+
+    table.getPreVirtualRowModel = () => table.getExpandedRowModel()
+    table.getVirtualRowModel = memo(
+      () => [table.getVirtualIndexes(), table.getPreVirtualRowModel()],
+      (indexes, rowModel: RowModel<TData>) => {
+        const virualRows: Array<Row<TData>> = []
+
+        for (let k = 0, len = indexes.length; k < len; k++) {
+          const i = indexes[k]!
+          const row = rowModel.rows[i]!
+
+          virualRows.push(row)
+        }
 
         // Create filtered rowsById
         const rowsById: Record<string, Row<TData>> = {}
-        visibleRows.forEach((row: Row<TData>) => {
+        virualRows.forEach((row: Row<TData>) => {
           rowsById[row.id] = row
         })
 
-        // !TODO
+        // !TODO [复用 DOM 元素]
         // 清理不再可见的行
-        const currentVisibleIds = new Set(visibleRows.map(r => r.id))
+        const currentVisibleIds = new Set(virualRows.map(r => r.id))
         rowModel.rows.forEach(row => {
           if (!currentVisibleIds.has(row.id) && row.getGui()) {
             // 行不再可见，销毁它
@@ -464,8 +528,8 @@ export const TableVirtual: TableFeature = {
         })
 
         return {
-          rows: visibleRows,
-          flatRows,
+          rows: virualRows,
+          flatRows: rowModel.flatRows,
           rowsById,
         }
       },
