@@ -64,7 +64,7 @@ export const RowRender: TableFeature = {
         // 如果有 measure 说明之前计算过, 直接从缓存里取
         // 否则表示新建, 从所有行里找到下标
         const index = !measure ? table.getPreVirtualRowModel().rows.findIndex(r => r.id === row.id) : measure.index
-console.log(index, 'indexindexindex')
+
         if (index === -1) return
 
         row.eGui = createElement('div', {
