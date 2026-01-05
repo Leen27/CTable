@@ -217,16 +217,299 @@ export function watchArrays(arrays: Record<string, any[]>, options: Omit<WatchAr
 }
 
 /**
+ * 监控对象变化的选项
+ */
+interface WatchObjectOptions {
+  name?: string
+  maxDepth?: number
+  showStack?: boolean
+  deep?: boolean  // 是否深度监控嵌套对象
+}
+
+/**
+ * 深度克隆对象用于比较
+ */
+function deepCloneObj<T>(obj: T, visited: WeakSet<object> = new WeakSet()): T {
+  if (obj === null || typeof obj !== 'object') return obj
+  if (obj instanceof Date) return new Date(obj.getTime()) as unknown as T
+  if (obj instanceof Array) return obj.map(item => deepCloneObj(item, visited)) as unknown as T
+  
+  if (typeof obj === 'object') {
+    // 防止循环引用
+    if (visited.has(obj)) {
+      return obj
+    }
+    visited.add(obj)
+    
+    const cloned = {} as T
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        cloned[key] = deepCloneObj(obj[key], visited)
+      }
+    }
+    return cloned
+  }
+  return obj
+}
+
+/**
+ * 格式化对象输出，限制长度避免日志过多
+ */
+function formatObject(obj: any, maxLength: number = 200): string {
+  try {
+    const str = JSON.stringify(obj, null, 2)
+    if (str.length > maxLength) {
+      return str.substring(0, maxLength) + '...'
+    }
+    return str
+  } catch (error) {
+    // 处理循环引用的情况
+    return `[Circular Object]: ${Object.keys(obj).join(', ')}`
+  }
+}
+
+/**
+ * 深度监控对象的所有嵌套属性
+ */
+function deepWatch<T extends Record<string, any>>(
+  obj: T,
+  path: string = '',
+  name: string,
+  showStack: boolean,
+  maxDepth: number,
+  visited: WeakSet<object> = new WeakSet()
+): T {
+  // 防止循环引用
+  if (typeof obj === 'object' && obj !== null) {
+    if (visited.has(obj)) {
+      return obj
+    }
+    visited.add(obj)
+  }
+
+  return new Proxy(obj, {
+    set(target, property, value, receiver) {
+      const oldValue = target[property as keyof T]
+      const propertyPath = path ? `${path}.${String(property)}` : String(property)
+      
+      // 如果新值是对象且需要深度监控，先对其进行代理
+      let processedValue = value
+      if (typeof value === 'object' && value !== null) {
+        processedValue = deepWatch(value, propertyPath, name, showStack, maxDepth, visited)
+      }
+      
+      const result = Reflect.set(target, property, processedValue, receiver)
+      
+      const stack = showStack ? getCallStack(maxDepth) : ''
+      
+      console.group(`[${name}] 对象属性被修改`)
+      console.log(`属性路径: ${propertyPath}`)
+      console.log(`旧值:`, oldValue)
+      console.log(`新值:`, value)
+      console.log(`当前对象:`, formatObject(target))
+      if (showStack) {
+        console.log('调用栈:')
+        console.log(stack)
+      }
+      console.groupEnd()
+      
+      return result
+    },
+    
+    get(target, property, receiver) {
+      const value = target[property as keyof T]
+      
+      // 如果属性值是对象且需要深度监控，返回其代理版本
+      if (typeof value === 'object' && value !== null && !visited.has(value)) {
+        const propertyPath = path ? `${path}.${String(property)}` : String(property)
+        return deepWatch(value, propertyPath, name, showStack, maxDepth, visited)
+      }
+      
+      return Reflect.get(target, property, receiver)
+    },
+    
+    deleteProperty(target, property) {
+      const oldValue = target[property as keyof T]
+      const result = Reflect.deleteProperty(target, property)
+      
+      const stack = showStack ? getCallStack(maxDepth) : ''
+      const propertyPath = path ? `${path}.${String(property)}` : String(property)
+      
+      console.group(`[${name}] 对象属性被删除`)
+      console.log(`属性路径: ${propertyPath}`)
+      console.log(`被删除的值:`, oldValue)
+      console.log(`当前对象:`, formatObject(target))
+      if (showStack) {
+        console.log('调用栈:')
+        console.log(stack)
+      }
+      console.groupEnd()
+      
+      return result
+    }
+  })
+}
+
+/**
+ * 创建一个可重新赋值的监控对象
+ * @param targetObject 要监控的目标对象
+ * @param options 监控选项
+ * @returns 返回一个可重新赋值的监控对象
+ */
+export function createWatchObj<T extends Record<string, any>>(targetObject: T, options: WatchObjectOptions = {}) {
+  const { name = 'Object', maxDepth = 2, showStack = true, deep = true } = options
+  
+  // 保存原始对象的副本用于比较
+  let originalObject = deepCloneObj(targetObject)
+  
+  console.log(`[${name}] 开始监控对象:`, formatObject(targetObject))
+  
+  // 创建代理对象
+  let proxyObject: T
+  
+  if (deep) {
+    // 深度监控模式
+    proxyObject = deepWatch(targetObject, '', name, showStack, maxDepth)
+  } else {
+    // 浅层监控模式
+    proxyObject = new Proxy(targetObject, {
+      set(target, property, value, receiver) {
+        const oldValue = target[property as keyof T]
+        const result = Reflect.set(target, property, value, receiver)
+        
+        const stack = showStack ? getCallStack(maxDepth) : ''
+        
+        console.group(`[${name}] 对象属性被修改`)
+        console.log(`属性: ${String(property)}`)
+        console.log(`旧值:`, oldValue)
+        console.log(`新值:`, value)
+        console.log(`当前对象:`, formatObject(target))
+        if (showStack) {
+          console.log('调用栈:')
+          console.log(stack)
+        }
+        console.groupEnd()
+        
+        return result
+      },
+      
+      deleteProperty(target, property) {
+        const oldValue = target[property as keyof T]
+        const result = Reflect.deleteProperty(target, property)
+        
+        const stack = showStack ? getCallStack(maxDepth) : ''
+        
+        console.group(`[${name}] 对象属性被删除`)
+        console.log(`属性: ${String(property)}`)
+        console.log(`被删除的值:`, oldValue)
+        console.log(`当前对象:`, formatObject(target))
+        if (showStack) {
+          console.log('调用栈:')
+          console.log(stack)
+        }
+        console.groupEnd()
+        
+        return result
+      }
+    })
+  }
+  
+  // 返回一个可重新赋值的包装对象
+  const watchWrapper = {
+    _object: proxyObject,
+    _name: name,
+    _showStack: showStack,
+    _maxDepth: maxDepth,
+    _deep: deep,
+    
+    // 获取当前对象
+    get value() {
+      return this._object
+    },
+    
+    // 设置新对象值 - 这是关键功能
+    set value(newObject: T) {
+      const oldObject = deepCloneObj(this._object)
+      const stack = this._showStack ? getCallStack(this._maxDepth) : ''
+      
+      console.group(`[${this._name}] 对象被重新赋值`)
+      console.log(`旧对象:`, formatObject(this._object))
+      console.log(`新对象:`, formatObject(newObject))
+      if (this._showStack) {
+        console.log('调用栈:')
+        console.log(stack)
+      }
+      console.groupEnd()
+      
+      // 重新创建代理对象
+      if (this._deep) {
+        this._object = deepWatch(newObject, '', this._name, this._showStack, this._maxDepth)
+      } else {
+        this._object = new Proxy(newObject, {
+          set(target, property, value, receiver) {
+            const oldValue = target[property as keyof T]
+            const result = Reflect.set(target, property, value, receiver)
+            
+            const stack = showStack ? getCallStack(maxDepth) : ''
+            
+            console.group(`[${name}] 对象属性被修改`)
+            console.log(`属性: ${String(property)}`)
+            console.log(`旧值:`, oldValue)
+            console.log(`新值:`, value)
+            console.log(`当前对象:`, formatObject(target))
+            if (showStack) {
+              console.log('调用栈:')
+              console.log(stack)
+            }
+            console.groupEnd()
+            
+            return result
+          }
+        })
+      }
+    }
+  }
+  
+  return watchWrapper
+}
+
+/**
+ * 兼容旧版本的 watchObj - 直接返回代理对象
+ * 注意：这种方式不支持重新赋值追踪
+ */
+export function watchObj<T extends Record<string, any>>(targetObject: T, options: WatchObjectOptions = {}): T {
+  return createWatchObj(targetObject, options).value
+}
+
+/**
+ * 监控多个对象
+ */
+export function watchObjects(objects: Record<string, Record<string, any>>, options: Omit<WatchObjectOptions, 'name'> = {}) {
+  const watched: Record<string, Record<string, any>> = {}
+  
+  for (const [name, obj] of Object.entries(objects)) {
+    watched[name] = watchObj(obj, { ...options, name })
+  }
+  
+  return watched
+}
+
+/**
  * 示例用法
  * 
- * // 监控单个数组
- * const myArr = watchArr([1, 2, 3], { name: 'myArray' })
- * myArr.push(4) // 会打印调用信息
- * myArr[0] = 10 // 会打印元素修改信息
+ * // 监控单个对象
+ * const myObj = watchObj({ a: 1, b: { c: 2 } }, { name: 'myObject', deep: true })
+ * myObj.a = 10 // 会打印属性修改信息
+ * myObj.b.c = 20 // 深度监控也会打印嵌套属性修改
  * 
- * // 监控多个数组
- * const { arr1, arr2 } = watchArrays({
- *   arr1: [1, 2, 3],
- *   arr2: ['a', 'b', 'c']
+ * // 使用可重新赋值的包装器
+ * const watchedObj = createWatchObj({ x: 1, y: 2 }, { name: 'watchedObject' })
+ * watchedObj.value.x = 100 // 监控属性修改
+ * watchedObj.value = { x: 200, y: 300 } // 监控对象重新赋值
+ * 
+ * // 监控多个对象
+ * const { obj1, obj2 } = watchObjects({
+ *   obj1: { name: 'Alice', age: 25 },
+ *   obj2: { title: 'Hello', count: 0 }
  * })
  */

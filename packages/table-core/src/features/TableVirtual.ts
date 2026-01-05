@@ -1,4 +1,3 @@
-import { EventTypesEnum } from '../core/events'
 import {
   OnChangeFn,
   Row,
@@ -6,18 +5,14 @@ import {
   RowModel,
   Table,
   TableFeature,
-  TableState,
   Updater,
 } from '../types'
 import {
   debounce,
-  functionalUpdate,
   getMemoOptions,
   makeStateUpdater,
   memo,
-  throttle,
 } from '../utils'
-import { TableRenderState, TableRenderTableState } from './TableRender'
 
 export interface Rect {
   width: number
@@ -91,6 +86,10 @@ export interface ITableVirtualInstance<TData extends RowData> {
   getMeasurements(): Array<IVirtualItem>
   getVirtualViewportScrolling(): boolean
   measureElement(node: Element | null | undefined): void
+}
+
+export interface TableVirtualRow {
+  getMeasureMent(): IVirtualItem | undefined
 }
 
 export interface Range {
@@ -386,8 +385,8 @@ export const TableVirtual: TableFeature = {
 
     // 获取所有行的偏移数据
     table.getMeasurements = memo(
-      () => [itemSizeCache],
-      (itemSizeCache) => {
+      () => [table.getPreVirtualRowModel().rows, itemSizeCache],
+      (rows, itemSizeCache) => {
         if (measurementsCache.length === 0) {
           measurementsCache = table.options.initialMeasurementsCache || []
           measurementsCache.forEach((item) => {
@@ -401,7 +400,7 @@ export const TableVirtual: TableFeature = {
 
         const measurements = measurementsCache.slice(0, min)
 
-        const count = table.getPreVirtualRowModel().rows.length
+        const count = rows.length
         for (let i = min; i < count; i++) {
           const row = table.getPreVirtualRowModel().rows[i]
           const key = row?.id
@@ -498,28 +497,27 @@ export const TableVirtual: TableFeature = {
       getMemoOptions(table.options, 'debugTable', 'getVirtualItems'),
     )
 
-    table.getPreVirtualRowModel = () => table.getExpandedRowModel()
+    table.getPreVirtualRowModel = () => table.getRowModel()
     table.getVirtualRowModel = memo(
       () => [table.getVirtualIndexes(), table.getPreVirtualRowModel()],
       (indexes, rowModel: RowModel<TData>) => {
-        const virualRows: Array<Row<TData>> = []
+        const virtualRows: Array<Row<TData>> = []
 
         for (let k = 0, len = indexes.length; k < len; k++) {
           const i = indexes[k]!
           const row = rowModel.rows[i]!
-
-          virualRows.push(row)
+          virtualRows.push(row)
         }
 
         // Create filtered rowsById
         const rowsById: Record<string, Row<TData>> = {}
-        virualRows.forEach((row: Row<TData>) => {
+        virtualRows.forEach((row: Row<TData>) => {
           rowsById[row.id] = row
         })
 
         // !TODO [复用 DOM 元素]
         // 清理不再可见的行
-        const currentVisibleIds = new Set(virualRows.map(r => r.id))
+        const currentVisibleIds = new Set(virtualRows.map(r => r.id))
         rowModel.rows.forEach(row => {
           if (!currentVisibleIds.has(row.id) && row.getGui()) {
             // 行不再可见，销毁它
@@ -528,7 +526,7 @@ export const TableVirtual: TableFeature = {
         })
 
         return {
-          rows: virualRows,
+          rows: virtualRows,
           flatRows: rowModel.flatRows,
           rowsById,
         }
@@ -604,4 +602,11 @@ export const TableVirtual: TableFeature = {
       oldDestroy()
     }
   },
+
+  createRow: <TData extends RowData>(
+    row: Row<TData>,
+    table: Table<TData>
+  ): void => {
+    row.getMeasureMent = () => table.getMeasurements().find(m => m.key === row.id)
+  }
 }

@@ -100,6 +100,7 @@ import {
   ITableVirtualOptions,
   VirtualInitialTableState,
   VirtualTableState,
+  TableVirtualRow
 } from './features/TableVirtual'
 import {
 ColumnRenderInstance,
@@ -251,7 +252,8 @@ export interface Row<TData extends RowData>
     RowSelectionRow,
     ExpandedRow,
     RowEventRow<TData>,
-    IRowRenderRow {}
+    IRowRenderRow,
+    TableVirtualRow {}
 
 export interface RowModel<TData extends RowData> {
   rows: Row<TData>[]

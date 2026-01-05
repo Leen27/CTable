@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tree Table Demo - Table Core</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 10px;
+      }
+      .description {
+        text-align: center;
+        color: #666;
+        margin-bottom: 20px;
+      }
+      .controls {
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      .controls button {
+        margin: 0 5px;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.2s;
+      }
+      .expand-all {
+        background-color: #007bff;
+        color: white;
+      }
+      .expand-all:hover {
+        background-color: #0056b3;
+      }
+      .collapse-all {
+        background-color: #6c757d;
+        color: white;
+      }
+      .collapse-all:hover {
+        background-color: #545b62;
+      }
+      .component-demo {
+        margin: 20px 0;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .component-title {
+        font-size: 1.2em;
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #555;
+      }
+      #tree-table-app {
+        min-height: 400px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      /* 树表格样式 */
+      .tree-table-container {
+        height: 500px;
+        position: relative;
+      }
+      .tree-table-row {
+        border-bottom: 1px solid #e0e0e0;
+      }
+      .tree-table-cell {
+        padding: 8px 12px;
+        font-size: 14px;
+        border-right: 1px solid #e0e0e0;
+      }
+      .tree-expand-button {
+        width: 20px;
+        height: 20px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 8px;
+        transition: transform 0.2s;
+      }
+      .tree-expand-button:hover {
+        background-color: #f0f0f0;
+        border-radius: 2px;
+      }
+      .tree-indent {
+        display: inline-block;
+      }
+      .folder-icon {
+        margin-right: 4px;
+      }
+      .file-icon {
+        margin-right: 4px;
+      }
+      .log-container {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🌳 Tree Table Demo</h1>
+      <p class="description">
+        Interactive tree table showcasing file system structure. Click on the expand/collapse icons to explore folders and files.
+      </p>
+      
+      <div class="controls">
+        <button class="expand-all" onclick="expandAll()">Expand All</button>
+        <button class="collapse-all" onclick="collapseAll()">Collapse All</button>
+      </div>
+      
+      <div id="tree-table-app"></div>
+    </div>
+    
+    <script type="module" src="./tree-table-main.ts"></script>
+    
+    <script>
+      // 全局函数供按钮调用
+      function expandAll() {
+        // 这些函数将在 tree-table-main.ts 中定义
+        if (window.treeTableInstance) {
+          window.treeTableInstance.toggleAllRowsExpanded(true)
+        }
+      }
+      
+      function collapseAll() {
+        if (window.treeTableInstance) {
+          window.treeTableInstance.toggleAllRowsExpanded(false)
+        }
+      }
+    </script>
+  </body>
+</html>
